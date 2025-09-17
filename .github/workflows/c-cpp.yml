@@ -13,13 +13,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Kompilacja programu
+    - name: Compiling
       run: clang++ src/main.cpp src/mygit.cpp -o mygit.exe -Iinclude
       
-    - name: Uruchomienie testowe programu
+    - name: Run
       run: ./mygit.exe
 
-    - name: Udostępnienie pliku .exe
+    - name: Share
       uses: actions/upload-artifact@v4
       with:
         name: program-windows
