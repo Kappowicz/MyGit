@@ -1,0 +1,26 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest #for now on windows
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Kompilacja programu
+      run: clang++ src/main.cpp src/mygit.cpp -o mygit.exe -Iinclude
+      
+    - name: Uruchomienie testowe programu
+      run: ./mygit.exe
+
+    - name: Udostępnienie pliku .exe
+      uses: actions/upload-artifact@v4
+      with:
+        name: program-windows
+        path: mygit.exe
