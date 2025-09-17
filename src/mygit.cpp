@@ -1,6 +1,6 @@
 #include <iostream>
 #include "mygit.h"
 
-void printMessage() {
-  std::cout << "is it compiling correctly?" << std::endl;
+void printHelp() {
+  std::cout << "this is my simple implementation of git \n start by initializing the repo with ./mygit init " << std::endl;
 }
