@@ -2,5 +2,5 @@
 #include "mygit.h"
 
 void printMessage() {
-  std::cout << "working..." << std::endl;
+  std::cout << "is it compiling correctly?" << std::endl;
 }
