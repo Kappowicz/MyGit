@@ -12,7 +12,7 @@ int main (int argc, char *argv[]) {
     return 0;
   }
 
-  std::string first = "siema"; // argv[1];
+  std::string first = argv[1];
   if (first == "--help")
   {
     printHelp();
