@@ -2,7 +2,7 @@
 #include <string>
 #include <filesystem>
 #include <iostream>
-#include <cstring>
+
 const std::string MAIN_FOLDER_NAME = ".mygit";
 int main (int argc, char *argv[]) {
   if (argc == 1)
@@ -19,19 +19,7 @@ int main (int argc, char *argv[]) {
   }
   else if (first == "init")
   {
-    if (std::filesystem::is_directory(MAIN_FOLDER_NAME))
-    {
-      std::cout << "folder " << MAIN_FOLDER_NAME <<" exists" << std::endl;
-    }
-    else {
-      if (std::filesystem::create_directory(MAIN_FOLDER_NAME))
-      {
-        std::cout << "folder " << MAIN_FOLDER_NAME <<" created" << std::endl;
-      }
-      else {
-        std::cout << "folder " << MAIN_FOLDER_NAME <<" failed to create" << std::endl;
-      }
-    }
+    initMyGit();
   }
 
   return 0;
