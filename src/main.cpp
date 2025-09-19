@@ -21,6 +21,11 @@ int main (int argc, char *argv[]) {
   {
     initMyGit();
   }
+  else if (first == "add")
+  {
+      std::string second = argv[2];
+      std::string resullt = calculateHash(second);
+  }
 
   return 0;
 }
