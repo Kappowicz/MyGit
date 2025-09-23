@@ -1,9 +1,6 @@
 #include "mygit.h"
 #include <string>
-#include <filesystem>
 #include <iostream>
-
-const std::string MAIN_FOLDER_NAME = ".mygit";
 
 int main(int argc, char *argv[]) {
   if (argc == 1) {
@@ -19,7 +16,7 @@ int main(int argc, char *argv[]) {
     initMyGit();
   } else if (first == "add") {
     std::string second = argv[2];
-    std::string result = calculateHash(second);
+    MyGitAdd(second);
   }
 
   return 0;

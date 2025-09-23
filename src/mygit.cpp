@@ -6,6 +6,8 @@
 #include <iomanip>
 
 const std::string MAIN_FOLDER_NAME = ".mygit";
+const std::string OBJECTS_FOLDER_NAME = "/objects";
+const std::string INDEX_FILE_NAME = "/index";
 
 void printHelp() {
   std::cout << "this is my simple implementation of git \n start by initializing the repo with ./mygit init " <<
@@ -21,6 +23,11 @@ void initMyGit() {
     } else
       std::cout << "folder " << MAIN_FOLDER_NAME << " failed to create" << std::endl;
   }
+
+  if (std::filesystem::create_directory(MAIN_FOLDER_NAME + OBJECTS_FOLDER_NAME)) {
+    std::cout << "folder " << MAIN_FOLDER_NAME + OBJECTS_FOLDER_NAME << " created" << std::endl;
+  } else
+    std::cout << "folder " << MAIN_FOLDER_NAME + OBJECTS_FOLDER_NAME << " failed to create" << std::endl;
 }
 
 std::string calculateHash(const std::string &fileName) //something like djb2
@@ -36,9 +43,16 @@ std::string calculateHash(const std::string &fileName) //something like djb2
     count = ((count << 2) + count) + c;
   }
 
-  std::cout << std::endl << "Hash for " << fileName << ": " << std::endl;
-  std::cout << count << std::endl;
-  std::cout << "Sum of all numbers in this file and their indexes is: "
-      << std::setw(20) << std::setfill('0') << count << std::endl;
+  std::cout << std::endl << "Hash for " << fileName << ": " << count << std::endl;
+
   return std::to_string(count);
+}
+
+void MyGitAdd(const std::string &fileName) {
+  std::string fileDestination = MAIN_FOLDER_NAME + OBJECTS_FOLDER_NAME + "/" + calculateHash(fileName);
+  if (std::filesystem::exists(fileDestination)) {
+    std::cout << "File " << fileDestination << " already exists" << std::endl;
+    return;
+  }
+  std::filesystem::copy_file(fileName, fileDestination);
 }
