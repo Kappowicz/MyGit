@@ -4,27 +4,22 @@
 #include <iostream>
 
 const std::string MAIN_FOLDER_NAME = ".mygit";
-int main (int argc, char *argv[]) {
-  if (argc == 1)
-  {
+
+int main(int argc, char *argv[]) {
+  if (argc == 1) {
     std::cout << "start with 'mygit.exe --help'" << std::endl;
     printHelp();
     return 0;
   }
 
   std::string first = argv[1];
-  if (first == "--help")
-  {
+  if (first == "--help") {
     printHelp();
-  }
-  else if (first == "init")
-  {
+  } else if (first == "init") {
     initMyGit();
-  }
-  else if (first == "add")
-  {
-      std::string second = argv[2];
-      std::string resullt = calculateHash(second);
+  } else if (first == "add") {
+    std::string second = argv[2];
+    std::string result = calculateHash(second);
   }
 
   return 0;
