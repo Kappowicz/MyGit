@@ -17,6 +17,8 @@ int main(int argc, char *argv[]) {
   } else if (first == "add") {
     std::string second = argv[2];
     MyGitAdd(second);
+  } else if (first == "commit") {
+    MyGitCommit();
   }
 
   return 0;

@@ -7,6 +7,8 @@
 const std::string MAIN_FOLDER_NAME = ".mygit";
 const std::string OBJECTS_FOLDER_NAME = "/objects";
 const std::string INDEX_FILE_NAME = "/index";
+const std::string EXEC_CHAR = "e";
+const std::string NOT_EXEC_CHAR = "n";
 
 void printHelp() {
   std::cout << "this is my simple implementation of git \n start by initializing the repo with ./mygit init " <<
@@ -67,8 +69,12 @@ void addToIndex(const std::string &fileName, std::string hash) {
   std::filesystem::path filePath(fileName);
   std::filesystem::file_status status = std::filesystem::status(filePath);
   std::filesystem::perms permisions = status.permissions();
+  std::string currExecChar = permisions == std::filesystem::perms::owner_exec ? EXEC_CHAR : NOT_EXEC_CHAR;
 
-  std::string output = hash + " " + fileName;
+  std::string output = currExecChar + " " + hash + " " + fileName;
 
   file.write(output.c_str(), output.size());
+}
+
+void MyGitCommit() {
 }

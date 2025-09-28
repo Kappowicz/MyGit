@@ -12,3 +12,5 @@ std::string calculateHash(const std::string &fileName);
 void MyGitAdd(const std::string &fileName);
 
 void addToIndex(const std::string &fileName, std::string hash);
+
+void MyGitCommit();
