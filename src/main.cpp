@@ -19,6 +19,11 @@ int main(int argc, char *argv[]) {
     MyGitAdd(second);
   } else if (first == "commit") {
     MyGitCommit();
+  } else if (first == "erase") {
+    //debug purpose only, doesn't exist in real git
+    MyGitErase();
+  } else {
+    std::cout << "Command '" << first << "' not found" << std::endl;
   }
 
   return 0;

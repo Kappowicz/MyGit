@@ -110,8 +110,15 @@ Initial commit with siema.txt and ok.png        <- this commit's message
       std::cout << " Something different: " << word;
     }
 
-    //std::cout << " " << word;
-
     currentWordCount++;
+  }
+}
+
+void MyGitErase() {
+  if (std::filesystem::exists(MAIN_FOLDER_NAME)) {
+    std::filesystem::remove_all(MAIN_FOLDER_NAME);
+    std::cout << "Erased " << MAIN_FOLDER_NAME << " and all it's children" << std::endl;
+  } else {
+    std::cout << "File " << MAIN_FOLDER_NAME << " did not exist" << std::endl;
   }
 }
