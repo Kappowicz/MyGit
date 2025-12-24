@@ -3,15 +3,23 @@
 #include <filesystem> //available from c++17
 #include <fstream>
 #include <string>
+#include <sstream>
 
 const std::string MAIN_FOLDER_NAME = ".mygit";
 const std::string OBJECTS_FOLDER_NAME = "/objects";
+const std::string REFS_FOLDER_NAME = "/refs";
 const std::string INDEX_FILE_NAME = "/index";
+const std::string TEMP_COMMIT_FILE_NAME = "/.tempcommit";
 const std::string EXEC_CHAR = "e";
 const std::string NOT_EXEC_CHAR = "n";
+const std::string MAIN_BRANCH_NAME = "main";
 
 const std::string INDEX_FILE_LOCALIZATION = MAIN_FOLDER_NAME + INDEX_FILE_NAME;
 const std::string OBJECTS_FOLDER_LOCALIZATION = MAIN_FOLDER_NAME + OBJECTS_FOLDER_NAME;
+const std::string TEMP_COMMIT_FILE_LOCALIZATION = MAIN_FOLDER_NAME + TEMP_COMMIT_FILE_NAME;
+
+const std::string REFS_FOLDER_LOCALIZATION = MAIN_FOLDER_NAME + REFS_FOLDER_NAME;
+const std::string MAIN_BRANCH_LOCALIZATION = REFS_FOLDER_LOCALIZATION + "/" + MAIN_BRANCH_NAME;
 
 void printHelp() {
   std::cout << "this is my simple implementation of git \n start by initializing the repo with ./mygit init " <<
@@ -32,6 +40,18 @@ void initMyGit() {
     std::cout << "folder " << OBJECTS_FOLDER_LOCALIZATION << " created" << std::endl;
   } else
     std::cout << "folder " << OBJECTS_FOLDER_LOCALIZATION << " failed to create" << std::endl;
+
+  if (std::filesystem::create_directory(REFS_FOLDER_LOCALIZATION)) {
+    std::cout << "folder " << REFS_FOLDER_LOCALIZATION << " created" << std::endl;
+  } else
+    std::cout << "folder " << REFS_FOLDER_LOCALIZATION << " failed to create" << std::endl;
+
+  std::ofstream file(MAIN_BRANCH_LOCALIZATION, std::ios::app);
+  if (!file.is_open()) {
+    throw std::runtime_error("Failed to open the file: " + MAIN_BRANCH_LOCALIZATION);
+  } else {
+    std::cout << "created empty file for default branch: " << MAIN_BRANCH_LOCALIZATION << std::endl;
+  }
 }
 
 std::string calculateHash(const std::string &fileName) //something like djb2
@@ -47,12 +67,17 @@ std::string calculateHash(const std::string &fileName) //something like djb2
     count = ((count << 2) + count) + c;
   }
 
-  std::cout << std::endl << "Hash for " << fileName << ": " << count << std::endl;
+  //std::cout << "Hash for " << fileName << ": " << count << std::endl;
 
   return std::to_string(count);
 }
 
 void MyGitAdd(const std::string &fileName) {
+  if (!std::filesystem::exists(MAIN_FOLDER_NAME)) {
+    std::cout << "Folder " << MAIN_FOLDER_NAME << " doesn't exist!" << std::endl;
+    std::cout << "Maybe you didn't './MyGit init'?" << std::endl;
+    return;
+  }
   std::string hash = calculateHash(fileName);
   std::string fileDestination = OBJECTS_FOLDER_LOCALIZATION + "/" + hash;
   if (std::filesystem::exists(fileDestination)) {
@@ -69,49 +94,93 @@ void addToIndex(const std::string &fileName, std::string hash) {
   if (!file.is_open()) {
     throw std::runtime_error("Failed to open the file: " + fileName);
   }
+
   std::filesystem::path filePath(fileName);
   std::filesystem::file_status status = std::filesystem::status(filePath);
   std::filesystem::perms permisions = status.permissions();
-  std::string currExecChar = permisions == std::filesystem::perms::owner_exec ? EXEC_CHAR : NOT_EXEC_CHAR;
-
-  std::string output = currExecChar + " " + hash + " " + fileName + "\n";
-
+  std::string currExecChar =
+      (permisions & std::filesystem::perms::owner_exec) != std::filesystem::perms::none
+        ? EXEC_CHAR
+        : NOT_EXEC_CHAR;
+  std::string output = "file " + currExecChar + " " + hash + " " + fileName + "\n";
   file.write(output.c_str(), output.size());
 }
 
-void MyGitCommit() {
+void MyGitCommit(std::string message) {
   /* sample commit object
 tree f314a9254316e1a92a54466b81bdd09415c44136   <- this commit tree hash from index file
-parent                                          <- previous commit hash from index file
+parent                                          <- previous commit hash from index file (empty for first commit)
 Initial commit with siema.txt and ok.png        <- this commit's message
    */
-  //Create tree object
+  if (!std::filesystem::exists(INDEX_FILE_LOCALIZATION)) {
+    std::cout << "File " << INDEX_FILE_LOCALIZATION << " doesn't exist!" << std::endl;
+    std::cout << "Maybe you didn't './MyGit add' any files after './MyGit init'?" << std::endl;
+    return;
+  }
   std::ifstream file(INDEX_FILE_LOCALIZATION, std::ios::binary);
   if (!file.is_open()) {
     throw std::runtime_error("Failed to open the file: " + INDEX_FILE_LOCALIZATION);
   }
+  std::ofstream tempCommitFile(TEMP_COMMIT_FILE_LOCALIZATION, std::ios::binary);
+  if (!tempCommitFile.is_open()) {
+    throw std::runtime_error("Failed to open the file: " + TEMP_COMMIT_FILE_LOCALIZATION);
+  }
+
+  std::cout << "Commit's message: " << message << std::endl;
+  tempCommitFile << "message\t" << message << std::endl;
+
+  //get current time in nanoseconds
+  auto systemClockNow = std::chrono::system_clock::now();
+  auto durationSinceEpoch = systemClockNow.time_since_epoch();
+  unsigned long long currentTimeInNanos = durationSinceEpoch.count();
+  std::cout << "Commit time in nanos: " << currentTimeInNanos << std::endl;
+  tempCommitFile << "time\t" << currentTimeInNanos << std::endl;
+
   std::string word;
-  //for now there are only 3 words in each line of index file, exec rights, hash and localization, to update later
+  //for now there are only 3 words in each line of index file: exec rights, hash and localization, to update later
   int amountOfWordsInLine = 3;
   int currentWordCount = 3;
   while (file >> word) {
     // displaying content
-
+    if (word == "file" && currentWordCount % amountOfWordsInLine == 0) continue;
     if (currentWordCount % amountOfWordsInLine == 0) {
-      //Exec rights word
-      std::cout << " Exec rights: " << word;
+      tempCommitFile << "file\t";
+      //Exec rights word (e for executable, n for not executable)
+      std::cout << "Exec rights: " << word;
+      tempCommitFile << word << " ";
       currentWordCount = 0;
     } else if (currentWordCount % amountOfWordsInLine == 1) {
       std::cout << " Hash: " << word;
+      tempCommitFile << word << " ";
     } else if (currentWordCount % amountOfWordsInLine == 2) {
       std::cout << " File path: " << word;
+      tempCommitFile << word << " ";
       std::cout << std::endl;
+      tempCommitFile << std::endl;
     } else {
       std::cout << " Something different: " << word;
+      tempCommitFile << "not supported!: " << word;
     }
 
     currentWordCount++;
   }
+
+  if (std::filesystem::is_empty(MAIN_BRANCH_LOCALIZATION)) {
+    std::cout << "There is no commit in main branch, setting current commit to HEAD" << std::endl;
+  } else {
+    std::cout << "Changing main branch HEAD to this commit" << std::endl;
+  }
+  std::fstream mainBranchFile(MAIN_BRANCH_LOCALIZATION, std::ios::out);
+  if (!mainBranchFile.is_open()) {
+    throw std::runtime_error("Failed to open the file: " + MAIN_BRANCH_LOCALIZATION);
+  }
+  std::string calculatedHash = calculateHash(TEMP_COMMIT_FILE_LOCALIZATION);
+  mainBranchFile << calculatedHash << std::endl;
+
+  std::filesystem::copy_file(TEMP_COMMIT_FILE_LOCALIZATION,
+                             OBJECTS_FOLDER_LOCALIZATION + "/" + calculatedHash);
+
+  std::filesystem::remove(TEMP_COMMIT_FILE_LOCALIZATION);
 }
 
 void MyGitErase() {
@@ -121,4 +190,92 @@ void MyGitErase() {
   } else {
     std::cout << "File " << MAIN_FOLDER_NAME << " did not exist" << std::endl;
   }
+}
+
+void MyGitStatus() {
+  std::ifstream indexFile(INDEX_FILE_LOCALIZATION, std::ios::binary);
+  if (!indexFile.is_open()) {
+    std::cout << "index file doesn't exist!" << std::endl;
+    std::cout << "Maybe you forgot to './MyGit init' or './MyGit add'" << std::endl;
+    return;
+  }
+  if (std::filesystem::exists(MAIN_BRANCH_LOCALIZATION)) {
+    std::cout << "There is no commit in branch main, checking working directory vs index diff" << std::endl;
+  } else {
+    std::cout << "Checking HEAD vs index diff" << std::endl;
+  }
+
+  std::vector<std::pair<std::string, std::string> > filesFromIndex;
+  filesFromIndex = getMyGitFiles(indexFile);
+
+  for (auto const &[filePath, fileHash]: filesFromIndex) {
+    std::cout << "index:" << filePath << std::endl;
+  }
+  std::ifstream headFileHashFile(MAIN_BRANCH_LOCALIZATION, std::ios::binary);
+  if (!headFileHashFile.is_open()) {
+    return;
+  }
+
+  std::string headFileHash;
+  getline(headFileHashFile, headFileHash);
+  std::cout << OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash << std::endl;
+  std::ifstream headFile(OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash, std::ios::binary);
+  if (!headFile.is_open()) {
+    return;
+  }
+
+  std::vector<std::pair<std::string, std::string> > filesFromHead;
+  filesFromHead = getMyGitFiles(headFile);
+
+  for (auto const &[filePath, fileHash]: filesFromHead) {
+    std::cout << "head:" << filePath << std::endl;
+  }
+
+
+  for (auto const &[filePath, fileHash]: filesFromIndex) {
+    if (calculateHash(filePath) != fileHash) {
+      std::cout << "Changes not staged for commit:" << filePath << std::endl;
+      std::cout << calculateHash(filePath) << std::endl;
+      std::cout << fileHash << std::endl;
+    }
+  }
+}
+
+std::vector<std::pair<std::string, std::string> > getMyGitFiles(std::ifstream &file) {
+  std::string word;
+  //for now there are only 3 words in each line of index file: exec rights, hash and localization, to update later
+  int amountOfWordsInLine = 4;
+  int currentWordCount = 0;
+  std::vector<std::pair<std::string, std::string> > filesToCheck;
+  int currentIndex = 0;
+  std::string fileHash;
+  std::string filePath;
+  std::string line;
+  while (getline(file, line)) {
+    // displaying content
+
+    std::stringstream ss(line);
+    std::string word;
+    std::vector<std::string> result;
+
+    // Extract words one by one
+    while (ss >> word) {
+      result.push_back(word);
+    }
+    if (result[0] != "file") continue;
+    std::cout << " File hash: " << result[2] << std::endl;
+    fileHash = result[2];
+
+    std::cout << " File path: " << result[3] << std::endl;
+    filePath = result[3];
+
+    filesToCheck.push_back(std::make_pair(filePath, fileHash));
+
+    currentWordCount++;
+    if (amountOfWordsInLine < currentWordCount) {
+      currentWordCount = 0;
+    }
+  }
+
+  return filesToCheck;
 }

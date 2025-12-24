@@ -13,6 +13,10 @@ void MyGitAdd(const std::string &fileName);
 
 void addToIndex(const std::string &fileName, std::string hash);
 
-void MyGitCommit();
+void MyGitCommit(std::string message);
 
 void MyGitErase();
+
+void MyGitStatus();
+
+std::vector<std::pair<std::string, std::string> > getMyGitFiles(std::ifstream &file);
