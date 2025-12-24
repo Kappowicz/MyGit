@@ -92,18 +92,56 @@ void MyGitAdd(const std::string &fileName) {
 void addToIndex(const std::string &fileName, std::string hash) {
   std::ofstream file(INDEX_FILE_LOCALIZATION, std::ios::app);
   if (!file.is_open()) {
-    throw std::runtime_error("Failed to open the file: " + fileName);
+    throw std::runtime_error("Failed to open the file2: " + INDEX_FILE_LOCALIZATION);
+  }
+  std::ifstream file2(INDEX_FILE_LOCALIZATION);
+  if (!file2.is_open()) {
+    std::cout << "index file doesnt exist!" << std::endl;
+    return;
   }
 
-  std::filesystem::path filePath(fileName);
-  std::filesystem::file_status status = std::filesystem::status(filePath);
-  std::filesystem::perms permisions = status.permissions();
-  std::string currExecChar =
-      (permisions & std::filesystem::perms::owner_exec) != std::filesystem::perms::none
-        ? EXEC_CHAR
-        : NOT_EXEC_CHAR;
-  std::string output = "file " + currExecChar + " " + hash + " " + fileName + "\n";
-  file.write(output.c_str(), output.size());
+  std::vector<std::pair<std::string, std::string> > foundFiles = getMyGitFiles(file2);
+  bool fileFound = false;
+  for (auto const &[filePath, fileHash]: foundFiles) {
+    if (filePath == fileName) {
+      std::cout << "File name: " << filePath << " already exists!" << std::endl;
+      fileFound = true;
+    }
+  }
+
+  std::ofstream tempFile(INDEX_FILE_LOCALIZATION + ".temp");
+  if (!tempFile.is_open()) {
+    throw std::runtime_error("Failed to open the file2: " + INDEX_FILE_LOCALIZATION);
+  }
+
+  if (fileFound) {
+    std::string output;
+    //change only the hash of the file
+    for (auto const &[filePath, fileHash]: foundFiles) {
+      if (filePath == fileName) {
+        //todo: make generateFiles function get also exec rights from file, so for now we will leave -
+        output = "file - " + calculateHash(filePath) + " " + filePath + "\n";
+        tempFile.write(output.c_str(), output.size());
+      } else {
+        output = "file - " + fileHash + " " + filePath + "\n";
+        tempFile.write(output.c_str(), output.size());
+      }
+    }
+    tempFile.close();
+    std::filesystem::copy_file(INDEX_FILE_LOCALIZATION + ".temp",
+                               INDEX_FILE_LOCALIZATION, std::filesystem::copy_options::overwrite_existing);
+  } else {
+    //write at the end of the file
+    std::filesystem::path filePath(fileName);
+    std::filesystem::file_status status = std::filesystem::status(filePath);
+    std::filesystem::perms permisions = status.permissions();
+    std::string currExecChar =
+        (permisions & std::filesystem::perms::owner_exec) != std::filesystem::perms::none
+          ? EXEC_CHAR
+          : NOT_EXEC_CHAR;
+    std::string output = "file " + currExecChar + " " + hash + " " + fileName + "\n";
+    file.write(output.c_str(), output.size());
+  }
 }
 
 void MyGitCommit(std::string message) {
@@ -231,10 +269,28 @@ void MyGitStatus() {
     std::cout << "head:" << filePath << std::endl;
   }
 
+  //TODO: delete this ugly n^2 loop for hashmap or something better
+  for (auto const &[filePathHead, fileHashHead]: filesFromHead) {
+    for (auto const &[filePathIndex, fileHashIndex]: filesFromIndex) {
+      if (filePathHead == filePathIndex) {
+        if (fileHashHead == fileHashIndex) {
+          std::cout << filePathHead << " is the same in index and head" << std::endl;
+        } else {
+          std::cout << "modified: " << filePathHead << std::endl;
+        }
+      } else if (fileHashHead == fileHashIndex) {
+        if (filePathHead == filePathIndex) {
+          std::cout << filePathHead << " is the same in index and head" << std::endl;
+        } else {
+          std::cout << "name changed: " << filePathHead << std::endl;
+        }
+      }
+    }
+  }
 
   for (auto const &[filePath, fileHash]: filesFromIndex) {
     if (calculateHash(filePath) != fileHash) {
-      std::cout << "Changes not staged for commit:" << filePath << std::endl;
+      std::cout << "Changes not staged for commit: " << filePath << std::endl;
       std::cout << calculateHash(filePath) << std::endl;
       std::cout << fileHash << std::endl;
     }
@@ -243,7 +299,6 @@ void MyGitStatus() {
 
 std::vector<std::pair<std::string, std::string> > getMyGitFiles(std::ifstream &file) {
   std::string word;
-  //for now there are only 3 words in each line of index file: exec rights, hash and localization, to update later
   int amountOfWordsInLine = 4;
   int currentWordCount = 0;
   std::vector<std::pair<std::string, std::string> > filesToCheck;
@@ -253,7 +308,6 @@ std::vector<std::pair<std::string, std::string> > getMyGitFiles(std::ifstream &f
   std::string line;
   while (getline(file, line)) {
     // displaying content
-
     std::stringstream ss(line);
     std::string word;
     std::vector<std::string> result;
