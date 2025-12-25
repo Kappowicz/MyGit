@@ -21,6 +21,18 @@ const std::string TEMP_COMMIT_FILE_LOCALIZATION = MAIN_FOLDER_NAME + TEMP_COMMIT
 const std::string REFS_FOLDER_LOCALIZATION = MAIN_FOLDER_NAME + REFS_FOLDER_NAME;
 const std::string MAIN_BRANCH_LOCALIZATION = REFS_FOLDER_LOCALIZATION + "/" + MAIN_BRANCH_NAME;
 
+struct FileProperties {
+  FileProperties(char exec_char, const std::string &file_hash, const std::string &file_path)
+    : execChar(exec_char),
+      fileHash(file_hash),
+      filePath(file_path) {
+  }
+
+  char execChar;
+  std::string fileHash;
+  std::string filePath;
+};
+
 void printHelp() {
   std::cout << "this is my simple implementation of git \n start by initializing the repo with ./mygit init " <<
       std::endl;
@@ -100,9 +112,9 @@ void addToIndex(const std::string &fileName, std::string hash) {
     return;
   }
 
-  std::vector<std::pair<std::string, std::string> > foundFiles = getMyGitFiles(file2);
+  std::vector<FileProperties> fileProperties = getMyGitFiles(file2);
   bool fileFound = false;
-  for (auto const &[filePath, fileHash]: foundFiles) {
+  for (auto const &[execChar, fileHash, filePath]: fileProperties) {
     if (filePath == fileName) {
       std::cout << "File name: " << filePath << " already exists!" << std::endl;
       fileFound = true;
@@ -117,13 +129,13 @@ void addToIndex(const std::string &fileName, std::string hash) {
   if (fileFound) {
     std::string output;
     //change only the hash of the file
-    for (auto const &[filePath, fileHash]: foundFiles) {
+    for (auto const &[execChar, fileHash, filePath]: fileProperties) {
       if (filePath == fileName) {
         //todo: make generateFiles function get also exec rights from file, so for now we will leave -
-        output = "file - " + calculateHash(filePath) + " " + filePath + "\n";
+        output = "file " + std::string{execChar} + " " + calculateHash(filePath) + " " + filePath + "\n";
         tempFile.write(output.c_str(), output.size());
       } else {
-        output = "file - " + fileHash + " " + filePath + "\n";
+        output = "file " + std::string{execChar} + " " + fileHash + " " + filePath + "\n";
         tempFile.write(output.c_str(), output.size());
       }
     }
@@ -243,10 +255,10 @@ void MyGitStatus() {
     std::cout << "Checking HEAD vs index diff" << std::endl;
   }
 
-  std::vector<std::pair<std::string, std::string> > filesFromIndex;
+  std::vector<FileProperties> filesFromIndex;
   filesFromIndex = getMyGitFiles(indexFile);
 
-  for (auto const &[filePath, fileHash]: filesFromIndex) {
+  for (auto const &[execChar, fileHash, filePath]: filesFromIndex) {
     std::cout << "index:" << filePath << std::endl;
   }
   std::ifstream headFileHashFile(MAIN_BRANCH_LOCALIZATION, std::ios::binary);
@@ -262,16 +274,16 @@ void MyGitStatus() {
     return;
   }
 
-  std::vector<std::pair<std::string, std::string> > filesFromHead;
+  std::vector<FileProperties> filesFromHead;
   filesFromHead = getMyGitFiles(headFile);
 
-  for (auto const &[filePath, fileHash]: filesFromHead) {
+  for (auto const &[execChar, fileHash, filePath]: filesFromHead) {
     std::cout << "head:" << filePath << std::endl;
   }
 
   //TODO: delete this ugly n^2 loop for hashmap or something better
-  for (auto const &[filePathHead, fileHashHead]: filesFromHead) {
-    for (auto const &[filePathIndex, fileHashIndex]: filesFromIndex) {
+  for (auto const &[execCharHead, fileHashHead, filePathHead]: filesFromHead) {
+    for (auto const &[execCharIndex, fileHashIndex, filePathIndex]: filesFromIndex) {
       if (filePathHead == filePathIndex) {
         if (fileHashHead == fileHashIndex) {
           std::cout << filePathHead << " is the same in index and head" << std::endl;
@@ -288,7 +300,7 @@ void MyGitStatus() {
     }
   }
 
-  for (auto const &[filePath, fileHash]: filesFromIndex) {
+  for (auto const &[execChar, fileHash, filePath]: filesFromIndex) {
     if (calculateHash(filePath) != fileHash) {
       std::cout << "Changes not staged for commit: " << filePath << std::endl;
       std::cout << calculateHash(filePath) << std::endl;
@@ -297,12 +309,12 @@ void MyGitStatus() {
   }
 }
 
-std::vector<std::pair<std::string, std::string> > getMyGitFiles(std::ifstream &file) {
+std::vector<FileProperties> getMyGitFiles(std::ifstream &file) {
   std::string word;
   int amountOfWordsInLine = 4;
   int currentWordCount = 0;
-  std::vector<std::pair<std::string, std::string> > filesToCheck;
-  int currentIndex = 0;
+  std::vector<FileProperties> fileProperties;
+
   std::string fileHash;
   std::string filePath;
   std::string line;
@@ -317,13 +329,17 @@ std::vector<std::pair<std::string, std::string> > getMyGitFiles(std::ifstream &f
       result.push_back(word);
     }
     if (result[0] != "file") continue;
+
+    char fileExecChar = result[1][0];
+    std::string fileHash = result[2];
+    std::string filePath = result[3];
+
+    fileProperties.push_back(
+      {fileExecChar, fileHash, filePath}
+    );
+    std::cout << " File exec: " << fileExecChar << std::endl;
     std::cout << " File hash: " << result[2] << std::endl;
-    fileHash = result[2];
-
     std::cout << " File path: " << result[3] << std::endl;
-    filePath = result[3];
-
-    filesToCheck.push_back(std::make_pair(filePath, fileHash));
 
     currentWordCount++;
     if (amountOfWordsInLine < currentWordCount) {
@@ -331,5 +347,5 @@ std::vector<std::pair<std::string, std::string> > getMyGitFiles(std::ifstream &f
     }
   }
 
-  return filesToCheck;
+  return fileProperties;
 }

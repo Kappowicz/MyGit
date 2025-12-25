@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <iomanip>
 
+struct FileProperties;
+
 void printHelp();
 
 void initMyGit();
@@ -19,4 +21,4 @@ void MyGitErase();
 
 void MyGitStatus();
 
-std::vector<std::pair<std::string, std::string> > getMyGitFiles(std::ifstream &file);
+std::vector<FileProperties> getMyGitFiles(std::ifstream &file);
