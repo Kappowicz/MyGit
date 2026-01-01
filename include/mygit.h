@@ -13,12 +13,14 @@ std::string calculateHash(const std::string &fileName);
 
 void MyGitAdd(const std::string &fileName);
 
-void addToIndex(const std::string &fileName, std::string hash);
+void addToIndex(const std::string &fileName, const std::string &hash);
 
-void MyGitCommit(std::string message);
+void MyGitCommit(const std::string &message);
 
 void MyGitErase();
 
 void MyGitStatus();
+
+void compareHeadAndIndex(std::vector<FileProperties> &filesFromIndex);
 
 std::vector<FileProperties> getMyGitFiles(std::ifstream &file);

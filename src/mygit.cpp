@@ -21,8 +21,14 @@ const std::string TEMP_COMMIT_FILE_LOCALIZATION = MAIN_FOLDER_NAME + TEMP_COMMIT
 const std::string REFS_FOLDER_LOCALIZATION = MAIN_FOLDER_NAME + REFS_FOLDER_NAME;
 const std::string MAIN_BRANCH_LOCALIZATION = REFS_FOLDER_LOCALIZATION + "/" + MAIN_BRANCH_NAME;
 
+#if defined(_DEBUG) || !defined(NDEBUG)
+#define LOG(x) std::cout << x << std::endl
+#else
+#define LOG(x)
+#endif
+
 struct FileProperties {
-  FileProperties(char exec_char, const std::string &file_hash, const std::string &file_path)
+  FileProperties(const char &exec_char, const std::string &file_hash, const std::string &file_path)
     : execChar(exec_char),
       fileHash(file_hash),
       filePath(file_path) {
@@ -34,7 +40,8 @@ struct FileProperties {
 };
 
 void printHelp() {
-  std::cout << "this is my simple implementation of git \n start by initializing the repo with ./mygit init " <<
+  std::cout << "this is my simple implementation of git \n "
+      "start by initializing the repo with ./MyGit init " <<
       std::endl;
 }
 
@@ -62,7 +69,7 @@ void initMyGit() {
   if (!file.is_open()) {
     throw std::runtime_error("Failed to open the file: " + MAIN_BRANCH_LOCALIZATION);
   } else {
-    std::cout << "created empty file for default branch: " << MAIN_BRANCH_LOCALIZATION << std::endl;
+    std::cout << "file " << MAIN_BRANCH_LOCALIZATION << " created" << std::endl;
   }
 }
 
@@ -79,7 +86,7 @@ std::string calculateHash(const std::string &fileName) //something like djb2
     count = ((count << 2) + count) + c;
   }
 
-  //std::cout << "Hash for " << fileName << ": " << count << std::endl;
+  LOG("Hash for " << fileName << ": " << count);
 
   return std::to_string(count);
 }
@@ -101,7 +108,7 @@ void MyGitAdd(const std::string &fileName) {
   addToIndex(fileName, hash);
 }
 
-void addToIndex(const std::string &fileName, std::string hash) {
+void addToIndex(const std::string &fileName, const std::string &hash) {
   std::ofstream file(INDEX_FILE_LOCALIZATION, std::ios::app);
   if (!file.is_open()) {
     throw std::runtime_error("Failed to open the file2: " + INDEX_FILE_LOCALIZATION);
@@ -131,7 +138,6 @@ void addToIndex(const std::string &fileName, std::string hash) {
     //change only the hash of the file
     for (auto const &[execChar, fileHash, filePath]: fileProperties) {
       if (filePath == fileName) {
-        //todo: make generateFiles function get also exec rights from file, so for now we will leave -
         output = "file " + std::string{execChar} + " " + calculateHash(filePath) + " " + filePath + "\n";
         tempFile.write(output.c_str(), output.size());
       } else {
@@ -156,7 +162,7 @@ void addToIndex(const std::string &fileName, std::string hash) {
   }
 }
 
-void MyGitCommit(std::string message) {
+void MyGitCommit(const std::string &message) {
   /* sample commit object
 tree f314a9254316e1a92a54466b81bdd09415c44136   <- this commit tree hash from index file
 parent                                          <- previous commit hash from index file (empty for first commit)
@@ -249,23 +255,34 @@ void MyGitStatus() {
     std::cout << "Maybe you forgot to './MyGit init' or './MyGit add'" << std::endl;
     return;
   }
-  if (std::filesystem::exists(MAIN_BRANCH_LOCALIZATION)) {
-    std::cout << "There is no commit in branch main, checking working directory vs index diff" << std::endl;
-  } else {
-    std::cout << "Checking HEAD vs index diff" << std::endl;
-  }
 
-  std::vector<FileProperties> filesFromIndex;
-  filesFromIndex = getMyGitFiles(indexFile);
+  std::vector<FileProperties> filesFromIndex = getMyGitFiles(indexFile);
 
   for (auto const &[execChar, fileHash, filePath]: filesFromIndex) {
     std::cout << "index:" << filePath << std::endl;
   }
+
+  if (std::filesystem::is_empty(MAIN_BRANCH_LOCALIZATION)) {
+    std::cout << "There is no commit in branch main, checking working directory vs index diff" << std::endl;
+  } else {
+    std::cout << "Checking HEAD vs index diff" << std::endl;
+    compareHeadAndIndex(filesFromIndex);
+  }
+
+  for (auto const &[execChar, fileHash, filePath]: filesFromIndex) {
+    if (calculateHash(filePath) != fileHash) {
+      std::cout << "Changes not staged for commit: " << filePath << std::endl;
+      std::cout << calculateHash(filePath) << std::endl;
+      std::cout << fileHash << std::endl;
+    }
+  }
+}
+
+void compareHeadAndIndex(std::vector<FileProperties> &filesFromIndex) {
   std::ifstream headFileHashFile(MAIN_BRANCH_LOCALIZATION, std::ios::binary);
   if (!headFileHashFile.is_open()) {
     return;
   }
-
   std::string headFileHash;
   getline(headFileHashFile, headFileHash);
   std::cout << OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash << std::endl;
@@ -299,24 +316,13 @@ void MyGitStatus() {
       }
     }
   }
-
-  for (auto const &[execChar, fileHash, filePath]: filesFromIndex) {
-    if (calculateHash(filePath) != fileHash) {
-      std::cout << "Changes not staged for commit: " << filePath << std::endl;
-      std::cout << calculateHash(filePath) << std::endl;
-      std::cout << fileHash << std::endl;
-    }
-  }
 }
 
 std::vector<FileProperties> getMyGitFiles(std::ifstream &file) {
-  std::string word;
   int amountOfWordsInLine = 4;
   int currentWordCount = 0;
-  std::vector<FileProperties> fileProperties;
 
-  std::string fileHash;
-  std::string filePath;
+  std::vector<FileProperties> fileProperties;
   std::string line;
   while (getline(file, line)) {
     // displaying content
@@ -337,9 +343,9 @@ std::vector<FileProperties> getMyGitFiles(std::ifstream &file) {
     fileProperties.push_back(
       {fileExecChar, fileHash, filePath}
     );
-    std::cout << " File exec: " << fileExecChar << std::endl;
-    std::cout << " File hash: " << result[2] << std::endl;
-    std::cout << " File path: " << result[3] << std::endl;
+    LOG(" File exec: " << fileExecChar);
+    LOG(" File hash: " << result[2]);
+    LOG(" File path: " << result[3]);
 
     currentWordCount++;
     if (amountOfWordsInLine < currentWordCount) {
