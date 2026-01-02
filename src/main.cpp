@@ -38,7 +38,9 @@ int main(int argc, char *argv[]) {
     MyGitErase();
   } else if (first == "status") {
     MyGitStatus();
-  } else {
+  } else if (first == "log")
+    MyGitLog();
+  else {
     std::cout << "Command '" << first << "' not found" << std::endl;
     if (first == "erase") std::cout << "Did you mean '_erase'?" << std::endl;
   }

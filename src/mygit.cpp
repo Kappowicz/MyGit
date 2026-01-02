@@ -185,6 +185,21 @@ Initial commit with siema.txt and ok.png        <- this commit's message
   std::cout << "Commit's message: " << message << std::endl;
   tempCommitFile << "message\t" << message << std::endl;
 
+  std::ifstream headFileHashFile(MAIN_BRANCH_LOCALIZATION, std::ios::binary);
+  if (!headFileHashFile.is_open()) {
+    return;
+  }
+  std::string headFileHash;
+  getline(headFileHashFile, headFileHash);
+  std::cout << OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash << std::endl;
+  std::ifstream headFile(OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash, std::ios::binary);
+  if (!headFile.is_open()) {
+    return;
+  }
+
+  std::cout << "Parent Commit: " << headFileHash << std::endl;
+  tempCommitFile << "parent\t" << headFileHash << std::endl;
+
   //get current time in nanoseconds
   auto systemClockNow = std::chrono::system_clock::now();
   auto durationSinceEpoch = systemClockNow.time_since_epoch();
@@ -354,4 +369,60 @@ std::vector<FileProperties> getMyGitFiles(std::ifstream &file) {
   }
 
   return fileProperties;
+}
+
+void MyGitLog() {
+  std::ifstream headFileHashFile(MAIN_BRANCH_LOCALIZATION, std::ios::binary);
+  if (!headFileHashFile.is_open()) {
+    return;
+  }
+  std::string headFileHash;
+  getline(headFileHashFile, headFileHash);
+  std::cout << OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash << std::endl;
+  std::ifstream headFile(OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash, std::ios::binary);
+  if (!headFile.is_open()) {
+    return;
+  }
+
+  //std::cout << headFileHash << std::endl;
+  std::string nextCommitToFind = headFileHash;
+  while (!nextCommitToFind.empty()) {
+    std::ifstream nextCommit(OBJECTS_FOLDER_LOCALIZATION + "/" + nextCommitToFind, std::ios::binary);
+    if (!headFile.is_open()) {
+      return;
+    }
+    std::string commitMessage;
+    getline(nextCommit, commitMessage);
+    std::cout << commitMessage << std::endl;
+
+    std::string line;
+    getline(nextCommit, line);
+
+    std::stringstream ss(line);
+    std::string word;
+    std::vector<std::string> result;
+
+    // Extract words one by one
+    while (ss >> word) {
+      result.push_back(word);
+    }
+
+    nextCommitToFind = result[1];
+
+    getline(nextCommit, line);
+    //getline(nextCommit, line);
+
+    while (getline(nextCommit, line)) {
+      result.erase(result.begin(), result.end());
+      //print edited files
+      std::stringstream ss2(line);
+
+      // Extract words one by one
+      while (ss2 >> word) {
+        result.push_back(word);
+      }
+
+      std::cout << result[3] << std::endl;
+    }
+  }
 }

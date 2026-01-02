@@ -24,3 +24,5 @@ void MyGitStatus();
 void compareHeadAndIndex(std::vector<FileProperties> &filesFromIndex);
 
 std::vector<FileProperties> getMyGitFiles(std::ifstream &file);
+
+void MyGitLog();
