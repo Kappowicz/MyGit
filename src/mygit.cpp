@@ -302,7 +302,7 @@ void MyGitStatus() {
   }
 }
 
-void compareHeadAndIndex(std::vector<FileProperties> &filesFromIndex) {
+void compareHeadAndIndex(const std::vector<FileProperties> &filesFromIndex) {
   std::ifstream headFileHashFile(MAIN_BRANCH_LOCALIZATION, std::ios::binary);
   if (!headFileHashFile.is_open()) {
     return;

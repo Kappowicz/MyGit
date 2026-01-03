@@ -21,7 +21,7 @@ void MyGitErase();
 
 void MyGitStatus();
 
-void compareHeadAndIndex(std::vector<FileProperties> &filesFromIndex);
+void compareHeadAndIndex(const std::vector<FileProperties> &filesFromIndex);
 
 std::vector<FileProperties> getMyGitFiles(std::ifstream &file);
 

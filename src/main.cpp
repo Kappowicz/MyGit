@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     std::string second = argv[2];
     std::string output = MyGitHashObject(second);
     if (!output.empty()) {
-      std::cout << MyGitHashObject(second) << std::endl;
+      std::cout << output << std::endl;
     }
   } else {
     std::cout << "Command '" << first << "' not found" << std::endl;
