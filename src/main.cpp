@@ -43,6 +43,12 @@ int main(int argc, char *argv[]) {
   else if (first == "checkout") {
     std::string second = argv[2];
     MyGitCheckout(second);
+  } else if (first == "hash-object") {
+    std::string second = argv[2];
+    std::string output = MyGitHashObject(second);
+    if (!output.empty()) {
+      std::cout << MyGitHashObject(second) << std::endl;
+    }
   } else {
     std::cout << "Command '" << first << "' not found" << std::endl;
     if (first == "erase") std::cout << "Did you mean '_erase'?" << std::endl;

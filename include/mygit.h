@@ -27,4 +27,6 @@ std::vector<FileProperties> getMyGitFiles(std::ifstream &file);
 
 void MyGitLog();
 
-void MyGitCheckout(std::string &commitName);
+void MyGitCheckout(const std::string &commitName);
+
+std::string MyGitHashObject(const std::string &filename);

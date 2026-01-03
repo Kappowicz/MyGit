@@ -436,7 +436,7 @@ void MyGitLog() {
   }
 }
 
-void MyGitCheckout(std::string &commitName) {
+void MyGitCheckout(const std::string &commitName) {
   LOG("checkout " << commitName);
 
   std::ifstream commitFile(OBJECTS_FOLDER_LOCALIZATION + "/" + commitName, std::ios::binary);
@@ -460,7 +460,8 @@ void MyGitCheckout(std::string &commitName) {
   getline(mainBranchFile, mainBranchCommitHash);
 
   if (commitName != mainBranchCommitHash) {
-    std::cout << "HEAD is now detached from any branch" << std::endl;
+    std::cout << "HEAD is now detached from any branch."
+        "ANY OPERATIONS ON DETACHED HEAD are not supported yet" << std::endl;
   }
 
   std::string commitFileMessage;
@@ -474,4 +475,13 @@ void MyGitCheckout(std::string &commitName) {
                                std::filesystem::copy_options::overwrite_existing);
     LOG("copied file from; " << OBJECTS_FOLDER_LOCALIZATION + "/" + file.fileHash << " to: " + file.filePath);
   }
+}
+
+std::string MyGitHashObject(const std::string &filename) {
+  std::ifstream fileToCheck(filename);
+  if (!fileToCheck.is_open()) {
+    std::cout << "file doesnt exist!" << std::endl;
+    return {};
+  }
+  return calculateHash(filename);
 }
