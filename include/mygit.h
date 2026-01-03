@@ -7,7 +7,7 @@ struct FileProperties;
 
 void printHelp();
 
-void initMyGit();
+void MyGitInit();
 
 std::string calculateHash(const std::string &fileName);
 
@@ -26,3 +26,5 @@ void compareHeadAndIndex(std::vector<FileProperties> &filesFromIndex);
 std::vector<FileProperties> getMyGitFiles(std::ifstream &file);
 
 void MyGitLog();
+
+void MyGitCheckout(std::string &commitName);

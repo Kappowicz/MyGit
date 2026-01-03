@@ -13,6 +13,7 @@ const std::string TEMP_COMMIT_FILE_NAME = "/.tempcommit";
 const std::string EXEC_CHAR = "e";
 const std::string NOT_EXEC_CHAR = "n";
 const std::string MAIN_BRANCH_NAME = "main";
+const std::string HEAD_NAME = "HEAD";
 
 const std::string INDEX_FILE_LOCALIZATION = MAIN_FOLDER_NAME + INDEX_FILE_NAME;
 const std::string OBJECTS_FOLDER_LOCALIZATION = MAIN_FOLDER_NAME + OBJECTS_FOLDER_NAME;
@@ -20,6 +21,7 @@ const std::string TEMP_COMMIT_FILE_LOCALIZATION = MAIN_FOLDER_NAME + TEMP_COMMIT
 
 const std::string REFS_FOLDER_LOCALIZATION = MAIN_FOLDER_NAME + REFS_FOLDER_NAME;
 const std::string MAIN_BRANCH_LOCALIZATION = REFS_FOLDER_LOCALIZATION + "/" + MAIN_BRANCH_NAME;
+const std::string HEAD_LOCALIZATION = REFS_FOLDER_LOCALIZATION + "/" + HEAD_NAME;
 
 #if defined(_DEBUG) || !defined(NDEBUG)
 #define LOG(x) std::cout << x << std::endl
@@ -45,7 +47,7 @@ void printHelp() {
       std::endl;
 }
 
-void initMyGit() {
+void MyGitInit() {
   if (std::filesystem::is_directory(MAIN_FOLDER_NAME)) {
     std::cout << "folder " << MAIN_FOLDER_NAME << " exists" << std::endl;
   } else {
@@ -70,6 +72,13 @@ void initMyGit() {
     throw std::runtime_error("Failed to open the file: " + MAIN_BRANCH_LOCALIZATION);
   } else {
     std::cout << "file " << MAIN_BRANCH_LOCALIZATION << " created" << std::endl;
+  }
+
+  std::ofstream head(HEAD_LOCALIZATION, std::ios::app);
+  if (!head.is_open()) {
+    throw std::runtime_error("Failed to open the file: " + HEAD_LOCALIZATION);
+  } else {
+    std::cout << "file " << HEAD_LOCALIZATION << " created" << std::endl;
   }
 }
 
@@ -393,7 +402,7 @@ void MyGitLog() {
     }
     std::string commitMessage;
     getline(nextCommit, commitMessage);
-    std::cout << commitMessage << std::endl;
+    std::cout << commitMessage << " " << nextCommitToFind << std::endl;
 
     std::string line;
     getline(nextCommit, line);
@@ -424,5 +433,45 @@ void MyGitLog() {
 
       std::cout << result[3] << std::endl;
     }
+  }
+}
+
+void MyGitCheckout(std::string &commitName) {
+  LOG("checkout " << commitName);
+
+  std::ifstream commitFile(OBJECTS_FOLDER_LOCALIZATION + "/" + commitName, std::ios::binary);
+  if (!commitFile.is_open()) {
+    std::cout << "commit not found" << std::endl;
+    return;
+  }
+
+  std::ofstream headFile(HEAD_LOCALIZATION, std::ios::binary);
+  if (!headFile.is_open()) {
+    std::cout << "HEAD file not found" << std::endl;
+    return;
+  }
+  headFile << commitName << std::endl;
+
+  std::ifstream mainBranchFile(MAIN_BRANCH_LOCALIZATION, std::ios::binary);
+  if (!mainBranchFile.is_open()) {
+    return;
+  }
+  std::string mainBranchCommitHash;
+  getline(mainBranchFile, mainBranchCommitHash);
+
+  if (commitName != mainBranchCommitHash) {
+    std::cout << "HEAD is now detached from any branch" << std::endl;
+  }
+
+  std::string commitFileMessage;
+  getline(commitFile, commitFileMessage);
+  LOG(commitFileMessage);
+
+  std::vector<FileProperties> fileProperties = getMyGitFiles(commitFile);
+  for (auto const &file: fileProperties) {
+    LOG(file.filePath);
+    std::filesystem::copy_file(OBJECTS_FOLDER_LOCALIZATION + "/" + file.fileHash, file.filePath,
+                               std::filesystem::copy_options::overwrite_existing);
+    LOG("copied file from; " << OBJECTS_FOLDER_LOCALIZATION + "/" + file.fileHash << " to: " + file.filePath);
   }
 }

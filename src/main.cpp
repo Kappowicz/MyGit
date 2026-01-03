@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
   if (first == "--help") {
     printHelp();
   } else if (first == "init") {
-    initMyGit();
+    MyGitInit();
   } else if (first == "add") {
     std::string second = argv[2];
     MyGitAdd(second);
@@ -40,7 +40,10 @@ int main(int argc, char *argv[]) {
     MyGitStatus();
   } else if (first == "log")
     MyGitLog();
-  else {
+  else if (first == "checkout") {
+    std::string second = argv[2];
+    MyGitCheckout(second);
+  } else {
     std::cout << "Command '" << first << "' not found" << std::endl;
     if (first == "erase") std::cout << "Did you mean '_erase'?" << std::endl;
   }
