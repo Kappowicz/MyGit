@@ -11,6 +11,7 @@ Available commands:
 - 'mygit _erase'
 - 'mygit log'
 - 'mygit hash-object {fileName}'
+- 'mygit diff'
 
 Initially planned features:
 

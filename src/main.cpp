@@ -49,6 +49,8 @@ int main(int argc, char *argv[]) {
     if (!output.empty()) {
       std::cout << output << std::endl;
     }
+  } else if (first == "diff") {
+    MyGitDiff();
   } else {
     std::cout << "Command '" << first << "' not found" << std::endl;
     if (first == "erase") std::cout << "Did you mean '_erase'?" << std::endl;

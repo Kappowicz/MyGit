@@ -30,3 +30,5 @@ void MyGitLog();
 void MyGitCheckout(const std::string &commitName);
 
 std::string MyGitHashObject(const std::string &filename);
+
+void MyGitDiff();

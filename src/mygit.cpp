@@ -5,6 +5,9 @@
 #include <string>
 #include <sstream>
 
+#define RED     "\033[31m"      /* Red */
+#define GREEN   "\033[32m"      /* Green */
+
 const std::string MAIN_FOLDER_NAME = ".mygit";
 const std::string OBJECTS_FOLDER_NAME = "/objects";
 const std::string REFS_FOLDER_NAME = "/refs";
@@ -484,4 +487,49 @@ std::string MyGitHashObject(const std::string &filename) {
     return {};
   }
   return calculateHash(filename);
+}
+
+void MyGitDiff() {
+  std::ifstream indexFile(INDEX_FILE_LOCALIZATION, std::ios::binary);
+  if (!indexFile.is_open()) {
+    std::cout << "index file doesn't exist!" << std::endl;
+    std::cout << "Maybe you forgot to './MyGit init' or './MyGit add'" << std::endl;
+    return;
+  }
+
+  std::vector<FileProperties> filesFromIndex = getMyGitFiles(indexFile);
+
+  for (auto const &[execChar, fileHash, filePath]: filesFromIndex) {
+    if (calculateHash(filePath) != fileHash) {
+      std::cout << "Changes not staged for commit: " << filePath << std::endl;
+
+      std::ifstream file(filePath);
+      if (!file.is_open()) {
+        std::cout << "file doesnt exist!" << std::endl;
+        return;
+      }
+
+      std::ifstream fileFromIndex(OBJECTS_FOLDER_LOCALIZATION + "/" + fileHash, std::ios::binary);
+      if (!file.is_open()) {
+        std::cout << "file doesnt exist!" << std::endl;
+        return;
+      }
+      std::string indexLine;
+      std::string fileLine;
+      bool isLine = false;
+      do {
+        isLine = false;
+        getline(fileFromIndex, indexLine);
+        if (!indexLine.empty()) isLine = true;
+        getline(file, fileLine);
+        if (!fileLine.empty()) isLine = true;
+        if (indexLine != fileLine) {
+          if (!indexLine.empty())
+            std::cout << RED << "-  " << indexLine << std::endl;
+          if (!fileLine.empty())
+            std::cout << GREEN << "+  " << fileLine << std::endl;
+        }
+      } while (isLine);
+    }
+  }
 }
