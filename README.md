@@ -15,15 +15,17 @@ Available commands:
 
 mygit folder structure with sample txt file commited:
 
-hello.txt  
-.mygit/  
-├── objects/  
-│ ├── 17240584371599139008  
-│ └── 2096893839203276767  
-├── index  
-└── refs/  
-├── HEAD  
-└── main
+```text
+hello.txt
+.mygit/
+├── objects/
+│   ├── 17240584371599139008
+│   └── 2096893839203276767
+├── index
+├── refs/
+│   ├── HEAD
+│   └── main
+```
 
 Initially planned features:
 
