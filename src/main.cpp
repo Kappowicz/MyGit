@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
       std::cout << "Did you mean parameter '-m' (message)?" << std::endl;
     }
   } else if (first == "_erase") {
-    //debug purpose only, doesn't exist in real git so started with _
+    //debug purpose only, doesn't exist in real git so starts with '_'
     //makes it easier to test because I don't need to remember where
     //the project base directory (with .git folder) is
     MyGitErase();

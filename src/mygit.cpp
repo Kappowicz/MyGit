@@ -4,9 +4,11 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <iomanip> //for hex conversion
 
-#define RED     "\033[31m"      /* Red */
-#define GREEN   "\033[32m"      /* Green */
+//colors defined to make std::cout text colorful (used in './MyGit diff')
+#define RED     "\033[31m"
+#define GREEN   "\033[32m"
 
 const std::string MAIN_FOLDER_NAME = ".mygit";
 const std::string OBJECTS_FOLDER_NAME = "/objects";
@@ -44,10 +46,19 @@ struct FileProperties {
   std::string filePath;
 };
 
+//help inspired by real git --help output
 void printHelp() {
-  std::cout << "this is my simple implementation of git \n "
-      "start by initializing the repo with ./MyGit init " <<
-      std::endl;
+  std::cout << R"(this is my simple implementation of git
+start by initializing the repo with './MyGit init'
+Available commands:
+'mygit init'
+'mygit status'
+'mygit add {fileName}'
+'mygit commit -m {commitName}'
+'mygit _erase'
+'mygit log'
+'mygit hash-object {fileName}'
+'mygit diff')" << std::endl;
 }
 
 void MyGitInit() {
@@ -70,15 +81,13 @@ void MyGitInit() {
   } else
     std::cout << "folder " << REFS_FOLDER_LOCALIZATION << " failed to create" << std::endl;
 
-  std::ofstream file(MAIN_BRANCH_LOCALIZATION, std::ios::app);
-  if (!file.is_open()) {
+  if (std::ofstream mainBranchFile(MAIN_BRANCH_LOCALIZATION, std::ios::app); !mainBranchFile.is_open()) {
     throw std::runtime_error("Failed to open the file: " + MAIN_BRANCH_LOCALIZATION);
   } else {
     std::cout << "file " << MAIN_BRANCH_LOCALIZATION << " created" << std::endl;
   }
 
-  std::ofstream head(HEAD_LOCALIZATION, std::ios::app);
-  if (!head.is_open()) {
+  if (std::ofstream headFile(HEAD_LOCALIZATION, std::ios::app); !headFile.is_open()) {
     throw std::runtime_error("Failed to open the file: " + HEAD_LOCALIZATION);
   } else {
     std::cout << "file " << HEAD_LOCALIZATION << " created" << std::endl;
@@ -87,6 +96,8 @@ void MyGitInit() {
 
 std::string calculateHash(const std::string &fileName) //something like djb2
 {
+  constexpr int minHashSize = 5;
+
   std::ifstream file(fileName, std::ios::binary);
   if (!file.is_open()) {
     throw std::runtime_error("Failed to open the file: " + fileName);
@@ -98,9 +109,14 @@ std::string calculateHash(const std::string &fileName) //something like djb2
     count = ((count << 2) + count) + c;
   }
 
-  LOG("Hash for " << fileName << ": " << count);
+  //convert hash to hexadecimal
+  std::stringstream ss;
+  ss << std::setfill('0') << std::setw(minHashSize) << std::hex << count;
+  std::string hexCount = ss.str();
 
-  return std::to_string(count);
+  LOG("Hash for " << fileName << ": " << hexCount);
+
+  return hexCount;
 }
 
 void MyGitAdd(const std::string &fileName) {
@@ -346,7 +362,7 @@ void compareHeadAndIndex(const std::vector<FileProperties> &filesFromIndex) {
 }
 
 std::vector<FileProperties> getMyGitFiles(std::ifstream &file) {
-  int amountOfWordsInLine = 4;
+  constexpr int amountOfWordsInLine = 4;
   int currentWordCount = 0;
 
   std::vector<FileProperties> fileProperties;
@@ -481,8 +497,7 @@ void MyGitCheckout(const std::string &commitName) {
 }
 
 std::string MyGitHashObject(const std::string &filename) {
-  std::ifstream fileToCheck(filename);
-  if (!fileToCheck.is_open()) {
+  if (std::ifstream fileToCheck(filename); !fileToCheck.is_open()) {
     std::cout << "file doesnt exist!" << std::endl;
     return {};
   }
