@@ -35,10 +35,10 @@ const std::string HEAD_LOCALIZATION = REFS_FOLDER_LOCALIZATION + "/" + HEAD_NAME
 #endif
 
 struct FileProperties {
-  FileProperties(const char &exec_char, const std::string &file_hash, const std::string &file_path)
+  FileProperties(const char &exec_char, std::string file_hash, std::string file_path)
     : execChar(exec_char),
-      fileHash(file_hash),
-      filePath(file_path) {
+      fileHash(std::move(file_hash)),
+      filePath(std::move(file_path)) {
   }
 
   char execChar;
@@ -46,7 +46,6 @@ struct FileProperties {
   std::string filePath;
 };
 
-//help inspired by real git --help output
 void printHelp() {
   std::cout << R"(this is my simple implementation of git
 start by initializing the repo with './MyGit init'
@@ -60,6 +59,7 @@ Available commands:
 'mygit hash-object {fileName}'
 'mygit diff')" << std::endl;
 }
+
 
 void MyGitInit() {
   if (std::filesystem::is_directory(MAIN_FOLDER_NAME)) {
@@ -83,15 +83,13 @@ void MyGitInit() {
 
   if (std::ofstream mainBranchFile(MAIN_BRANCH_LOCALIZATION, std::ios::app); !mainBranchFile.is_open()) {
     throw std::runtime_error("Failed to open the file: " + MAIN_BRANCH_LOCALIZATION);
-  } else {
-    std::cout << "file " << MAIN_BRANCH_LOCALIZATION << " created" << std::endl;
   }
+  std::cout << "file " << MAIN_BRANCH_LOCALIZATION << " created" << std::endl;
 
   if (std::ofstream headFile(HEAD_LOCALIZATION, std::ios::app); !headFile.is_open()) {
     throw std::runtime_error("Failed to open the file: " + HEAD_LOCALIZATION);
-  } else {
-    std::cout << "file " << HEAD_LOCALIZATION << " created" << std::endl;
   }
+  std::cout << "file " << HEAD_LOCALIZATION << " created" << std::endl;
 }
 
 std::string calculateHash(const std::string &fileName) //something like djb2
@@ -125,8 +123,8 @@ void MyGitAdd(const std::string &fileName) {
     std::cout << "Maybe you didn't './MyGit init'?" << std::endl;
     return;
   }
-  std::string hash = calculateHash(fileName);
-  std::string fileDestination = OBJECTS_FOLDER_LOCALIZATION + "/" + hash;
+  const std::string hash = calculateHash(fileName);
+  const std::string fileDestination = OBJECTS_FOLDER_LOCALIZATION + "/" + hash;
   if (std::filesystem::exists(fileDestination)) {
     std::cout << "File " << fileDestination << " already exists" << std::endl;
     return;
@@ -151,7 +149,7 @@ void addToIndex(const std::string &fileName, const std::string &hash) {
   bool fileFound = false;
   for (auto const &[execChar, fileHash, filePath]: fileProperties) {
     if (filePath == fileName) {
-      std::cout << "File name: " << filePath << " already exists!" << std::endl;
+      std::cout << "File name: " << filePath << " already exists. " << std::endl;
       fileFound = true;
     }
   }
@@ -166,6 +164,7 @@ void addToIndex(const std::string &fileName, const std::string &hash) {
     //change only the hash of the file
     for (auto const &[execChar, fileHash, filePath]: fileProperties) {
       if (filePath == fileName) {
+        std::cout << "Changing only hash of the file in index" << std::endl;
         output = "file " + std::string{execChar} + " " + calculateHash(filePath) + " " + filePath + "\n";
         tempFile.write(output.c_str(), output.size());
       } else {
@@ -180,13 +179,17 @@ void addToIndex(const std::string &fileName, const std::string &hash) {
     //write at the end of the file
     std::filesystem::path filePath(fileName);
     std::filesystem::file_status status = std::filesystem::status(filePath);
-    std::filesystem::perms permisions = status.permissions();
+    std::filesystem::perms permissions = status.permissions();
     std::string currExecChar =
-        (permisions & std::filesystem::perms::owner_exec) != std::filesystem::perms::none
+        (permissions & std::filesystem::perms::owner_exec) != std::filesystem::perms::none
           ? EXEC_CHAR
           : NOT_EXEC_CHAR;
     std::string output = "file " + currExecChar + " " + hash + " " + fileName + "\n";
     file.write(output.c_str(), output.size());
+  }
+
+  if (std::filesystem::remove(INDEX_FILE_LOCALIZATION + ".temp")) {
+    LOG(INDEX_FILE_LOCALIZATION + ".temp" + " deleted");
   }
 }
 
@@ -412,7 +415,6 @@ void MyGitLog() {
     return;
   }
 
-  //std::cout << headFileHash << std::endl;
   std::string nextCommitToFind = headFileHash;
   while (!nextCommitToFind.empty()) {
     std::ifstream nextCommit(OBJECTS_FOLDER_LOCALIZATION + "/" + nextCommitToFind, std::ios::binary);
@@ -438,7 +440,6 @@ void MyGitLog() {
     nextCommitToFind = result[1];
 
     getline(nextCommit, line);
-    //getline(nextCommit, line);
 
     while (getline(nextCommit, line)) {
       result.erase(result.begin(), result.end());
