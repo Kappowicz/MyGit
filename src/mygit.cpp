@@ -213,7 +213,7 @@ Initial commit with siema.txt and ok.png        <- this commit's message
     throw std::runtime_error("Failed to open the file: " + TEMP_COMMIT_FILE_LOCALIZATION);
   }
 
-  std::cout << "Commit's message: " << message << std::endl;
+  LOG("new commit's message: " << message);
   tempCommitFile << "message\t" << message << std::endl;
 
   std::ifstream headFileHashFile(MAIN_BRANCH_LOCALIZATION, std::ios::binary);
@@ -222,20 +222,25 @@ Initial commit with siema.txt and ok.png        <- this commit's message
   }
   std::string headFileHash;
   getline(headFileHashFile, headFileHash);
-  std::cout << OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash << std::endl;
+  LOG(OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash);
   std::ifstream headFile(OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash, std::ios::binary);
   if (!headFile.is_open()) {
     return;
   }
 
-  std::cout << "Parent Commit: " << headFileHash << std::endl;
+  if (headFileHash.empty()) {
+    std::cout << "Parent Commit doesn't exist, so it's first commit" << std::endl;
+  } else {
+    std::cout << "Parent Commit: " << headFileHash << std::endl;
+  }
+
   tempCommitFile << "parent\t" << headFileHash << std::endl;
 
   //get current time in nanoseconds
   auto systemClockNow = std::chrono::system_clock::now();
   auto durationSinceEpoch = systemClockNow.time_since_epoch();
   unsigned long long currentTimeInNanos = durationSinceEpoch.count();
-  std::cout << "Commit time in nanos: " << currentTimeInNanos << std::endl;
+  LOG("Commit time in nanos: " << currentTimeInNanos);
   tempCommitFile << "time\t" << currentTimeInNanos << std::endl;
 
   std::string word;
@@ -305,7 +310,7 @@ void MyGitStatus() {
   std::vector<FileProperties> filesFromIndex = getMyGitFiles(indexFile);
 
   for (auto const &[execChar, fileHash, filePath]: filesFromIndex) {
-    std::cout << "index:" << filePath << std::endl;
+    LOG("index:" << filePath);
   }
 
   if (std::filesystem::is_empty(MAIN_BRANCH_LOCALIZATION)) {
@@ -331,7 +336,8 @@ void compareHeadAndIndex(const std::vector<FileProperties> &filesFromIndex) {
   }
   std::string headFileHash;
   getline(headFileHashFile, headFileHash);
-  std::cout << OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash << std::endl;
+  if (headFileHash.empty()) throw std::runtime_error("Empty hash file even if in previous function it wasn't");
+  LOG(OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash);
   std::ifstream headFile(OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash, std::ios::binary);
   if (!headFile.is_open()) {
     return;
@@ -341,9 +347,10 @@ void compareHeadAndIndex(const std::vector<FileProperties> &filesFromIndex) {
   filesFromHead = getMyGitFiles(headFile);
 
   for (auto const &[execChar, fileHash, filePath]: filesFromHead) {
-    std::cout << "head:" << filePath << std::endl;
+    LOG("head:" << filePath);
   }
-
+  //TODO: make it show changes made in the front of the file correctly
+  //not like now it is showing as if all lines were changed
   //TODO: delete this ugly n^2 loop for hashmap or something better
   for (auto const &[execCharHead, fileHashHead, filePathHead]: filesFromHead) {
     for (auto const &[execCharIndex, fileHashIndex, filePathIndex]: filesFromIndex) {
