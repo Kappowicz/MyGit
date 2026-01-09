@@ -556,3 +556,14 @@ void MyGitDiff() {
     }
   }
 }
+
+void MyGitBranch() {
+  for (auto file: std::filesystem::directory_iterator(REFS_FOLDER_LOCALIZATION)) {
+    if (file.path().filename() == HEAD_NAME) continue;
+
+    std::cout << file.path() << std::endl;
+  }
+}
+
+void MyGitBranch(const std::string &branchName) {
+}

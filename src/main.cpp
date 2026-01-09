@@ -15,9 +15,11 @@ int main(int argc, char *argv[]) {
   } else if (first == "init") {
     MyGitInit();
   } else if (first == "add") {
+    if (argc < 3) throw std::invalid_argument("Not enough arguments");
     std::string second = argv[2];
     MyGitAdd(second);
   } else if (first == "commit") {
+    if (argc < 3) throw std::invalid_argument("Not enough arguments");
     std::string second = argv[2];
     if (second == "-m") {
       //for now there is only -m parameter
@@ -41,9 +43,11 @@ int main(int argc, char *argv[]) {
   } else if (first == "log")
     MyGitLog();
   else if (first == "checkout") {
+    if (argc < 3) throw std::invalid_argument("Not enough arguments");
     std::string second = argv[2];
     MyGitCheckout(second);
   } else if (first == "hash-object") {
+    if (argc < 3) throw std::invalid_argument("Not enough arguments");
     std::string second = argv[2];
     std::string output = MyGitHashObject(second);
     if (!output.empty()) {
@@ -51,6 +55,14 @@ int main(int argc, char *argv[]) {
     }
   } else if (first == "diff") {
     MyGitDiff();
+  } else if (first == "branch") {
+    if (argc < 3) throw std::invalid_argument("Not enough arguments");
+    std::string second = argv[2];
+    if (second.empty()) {
+      MyGitBranch();
+    } else {
+      MyGitBranch(second);
+    }
   } else {
     std::cout << "Command '" << first << "' not found" << std::endl;
     if (first == "erase") std::cout << "Did you mean '_erase'?" << std::endl;

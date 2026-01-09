@@ -32,3 +32,7 @@ void MyGitCheckout(const std::string &commitName);
 std::string MyGitHashObject(const std::string &filename);
 
 void MyGitDiff();
+
+void MyGitBranch();
+
+void MyGitBranch(const std::string &branchName);
