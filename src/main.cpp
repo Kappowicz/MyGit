@@ -56,11 +56,10 @@ int main(int argc, char *argv[]) {
   } else if (first == "diff") {
     MyGitDiff();
   } else if (first == "branch") {
-    if (argc < 3) throw std::invalid_argument("Not enough arguments");
-    std::string second = argv[2];
-    if (second.empty()) {
+    if (argc < 3) {
       MyGitBranch();
     } else {
+      std::string second = argv[2];
       MyGitBranch(second);
     }
   } else {
