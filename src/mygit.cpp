@@ -581,7 +581,7 @@ void MyGitBranch() {
     }
     std::string branchCommitHash;
     getline(tempFile, branchCommitHash);
-    std::cout << std::filesystem::__path_string(file.path().filename()) << " " << branchCommitHash << std::endl;
+    std::cout << file.path().filename().string() << " " << branchCommitHash << std::endl;
   }
 }
 
