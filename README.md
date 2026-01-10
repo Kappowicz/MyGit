@@ -8,6 +8,9 @@ Available commands:
 - 'mygit status'
 - 'mygit add {fileName}'
 - 'mygit commit -m {commitName}'
+- 'mygit checkout {commitName}' (doesn't support switching branches yet)
+- 'mygit branch'
+- 'mygit branch {branchName}'
 - 'mygit _erase'
 - 'mygit log'
 - 'mygit hash-object {fileName}'

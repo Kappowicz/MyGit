@@ -29,6 +29,10 @@ void MyGitLog();
 
 void MyGitCheckout(const std::string &commitName);
 
+void writeToHead(const std::string &message);
+
+std::string getFromHead();
+
 std::string MyGitHashObject(const std::string &filename);
 
 void MyGitDiff();
@@ -36,3 +40,5 @@ void MyGitDiff();
 void MyGitBranch();
 
 void MyGitBranch(const std::string &branchName);
+
+void MyGitSwitch(const std::string &branchName);

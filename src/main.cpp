@@ -62,6 +62,10 @@ int main(int argc, char *argv[]) {
       std::string second = argv[2];
       MyGitBranch(second);
     }
+  } else if (first == "switch") {
+    if (argc < 3) throw std::invalid_argument("Not enough arguments");
+    std::string second = argv[2];
+    MyGitSwitch(second);
   } else {
     std::cout << "Command '" << first << "' not found" << std::endl;
     if (first == "erase") std::cout << "Did you mean '_erase'?" << std::endl;

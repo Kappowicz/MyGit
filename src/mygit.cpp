@@ -283,7 +283,7 @@ Initial commit with siema.txt and ok.png        <- this commit's message
   }
   std::string calculatedHash = calculateHash(TEMP_COMMIT_FILE_LOCALIZATION);
   mainBranchFile << calculatedHash << std::endl;
-
+  writeToHead(calculatedHash);
   std::filesystem::copy_file(TEMP_COMMIT_FILE_LOCALIZATION,
                              OBJECTS_FOLDER_LOCALIZATION + "/" + calculatedHash);
 
@@ -472,12 +472,7 @@ void MyGitCheckout(const std::string &commitName) {
     return;
   }
 
-  std::ofstream headFile(HEAD_LOCALIZATION, std::ios::binary);
-  if (!headFile.is_open()) {
-    std::cout << "HEAD file not found" << std::endl;
-    return;
-  }
-  headFile << commitName << std::endl;
+  writeToHead(commitName);
 
   std::ifstream mainBranchFile(MAIN_BRANCH_LOCALIZATION, std::ios::binary);
   if (!mainBranchFile.is_open()) {
@@ -502,6 +497,25 @@ void MyGitCheckout(const std::string &commitName) {
                                std::filesystem::copy_options::overwrite_existing);
     LOG("copied file from; " << OBJECTS_FOLDER_LOCALIZATION + "/" + file.fileHash << " to: " + file.filePath);
   }
+}
+
+void writeToHead(const std::string &message) {
+  std::ofstream headFile(HEAD_LOCALIZATION, std::ios::trunc);
+  if (!headFile.is_open()) {
+    std::cout << "HEAD file not found" << std::endl;
+    return;
+  }
+  headFile << message << std::endl;
+}
+
+std::string getFromHead() {
+  std::ifstream headFile(HEAD_LOCALIZATION);
+  if (!headFile.is_open()) {
+    throw std::runtime_error("Failed to open the file: " + HEAD_LOCALIZATION);
+  }
+  std::string output;
+  getline(headFile, output);
+  return output;
 }
 
 std::string MyGitHashObject(const std::string &filename) {
@@ -561,9 +575,23 @@ void MyGitBranch() {
   for (auto file: std::filesystem::directory_iterator(REFS_FOLDER_LOCALIZATION)) {
     if (file.path().filename() == HEAD_NAME) continue;
 
-    std::cout << file.path() << std::endl;
+    std::ifstream tempFile(file.path());
+    if (!tempFile.is_open()) {
+      throw std::runtime_error("Failed to open the file: " + INDEX_FILE_LOCALIZATION);
+    }
+    std::string branchCommitHash;
+    getline(tempFile, branchCommitHash);
+    std::cout << std::filesystem::__path_string(file.path().filename()) << " " << branchCommitHash << std::endl;
   }
 }
 
 void MyGitBranch(const std::string &branchName) {
+  if (std::ofstream headFile(REFS_FOLDER_LOCALIZATION + "/" + branchName, std::ios::app); !headFile.is_open()) {
+    throw std::runtime_error("Failed to open the file: " + REFS_FOLDER_LOCALIZATION + "/" + branchName);
+  }
+  std::cout << "branch " << branchName << " created" << std::endl;
+}
+
+void MyGitSwitch(const std::string &branchName) {
+  std::cout << getFromHead() << std::endl;
 }
