@@ -463,7 +463,7 @@ void MyGitLog() {
   }
 }
 
-void MyGitCheckout(const std::string &commitName) {
+void MyGitCheckout(const std::string &commitName, bool isSwitchingBranch) {
   LOG("checkout " << commitName);
 
   std::ifstream commitFile(OBJECTS_FOLDER_LOCALIZATION + "/" + commitName, std::ios::binary);
@@ -481,7 +481,7 @@ void MyGitCheckout(const std::string &commitName) {
   std::string mainBranchCommitHash;
   getline(mainBranchFile, mainBranchCommitHash);
 
-  if (commitName != mainBranchCommitHash) {
+  if (commitName != mainBranchCommitHash && !isSwitchingBranch) {
     std::cout << "HEAD is now detached from any branch."
         "ANY OPERATIONS ON DETACHED HEAD are not supported yet" << std::endl;
   }
@@ -594,4 +594,15 @@ void MyGitBranch(const std::string &branchName) {
 
 void MyGitSwitch(const std::string &branchName) {
   std::cout << getFromHead() << std::endl;
+  std::ifstream newBranchFile(REFS_FOLDER_LOCALIZATION + "/" + branchName, std::ios::binary);
+  if (!newBranchFile.is_open()) {
+    std::cout << "Branch doesn't exist!" << std::endl;
+    return;
+  }
+  std::string newBranchHashLine;
+  getline(newBranchFile, newBranchHashLine);
+  writeToHead(newBranchHashLine);
+  std::cout << "new branch commit: " << newBranchHashLine << std::endl;
+
+  MyGitCheckout(newBranchHashLine, true);
 }

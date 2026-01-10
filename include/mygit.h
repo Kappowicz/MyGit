@@ -27,7 +27,7 @@ std::vector<FileProperties> getMyGitFiles(std::ifstream &file);
 
 void MyGitLog();
 
-void MyGitCheckout(const std::string &commitName);
+void MyGitCheckout(const std::string &commitName, bool isSwitchingBranch = false);
 
 void writeToHead(const std::string &message);
 
