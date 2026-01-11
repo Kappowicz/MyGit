@@ -41,12 +41,12 @@ hello.txt
 │   └── main
 ```
 
-### Initially planned features:
+### Planned features:
 
-- make 'mygit init' create folder .mygit
-- make 'mygit status' display the status of current folders repo
-- make 'mygit --help' display info about whole command
-- make 'mygit add {}' add some files to the "index",
+- [X] make 'mygit init' create folder .mygit
+- [X] make 'mygit status' display the status of current folders repo
+- [X] make 'mygit --help' display info about whole command
+- [X] make 'mygit add {}' add some files to the "index",
   basically it will copy the file to .mygit/objects,
   and rename the file to hash of this file,
   (theoretically git also compresses the file
@@ -55,8 +55,10 @@ hello.txt
   .git/objects/qw/ert1 and it makes the /objects folder cleaner, but for
   now I'll put everything into one folder, time for improvements will come later]),
   I will also have to make ./mygit/index update with all commands
-- make my own very simple implementation of some kind of hashing (accidentally remade djb2), now I plan to implement
+- [X] make my own very simple implementation of some kind of hashing (accidentally remade djb2), now I plan to implement
   SHA-256 later
-- make 'mygit diff's to check differences between some commit and current directory
-- make some fancy tests in github ci/cd 
-
+- [X] make 'mygit diff's to check differences between some commit and current directory
+- [ ] make some fancy tests in github ci/cd
+- [ ] make .mygitignore
+- [ ] make tree object type (for now there are only files and commits, no directories)
+- [ ] make mygit merge
