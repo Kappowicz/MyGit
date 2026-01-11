@@ -47,17 +47,25 @@ struct FileProperties {
 };
 
 void printHelp() {
+  //inspired by real git --help
   std::cout << R"(this is my simple implementation of git
 start by initializing the repo with './MyGit init'
 Available commands:
-'mygit init'
-'mygit status'
-'mygit add {fileName}'
-'mygit commit -m {commitName}'
-'mygit _erase'
-'mygit log'
-'mygit hash-object {fileName}'
-'mygit diff')" << std::endl;
+start or delete a working area:
+- 'mygit init' initialize mygit folder structure or reinitialize existing one
+- 'mygit _erase' delete entire mygit repository (debug)
+work on the current change:
+- 'mygit add {fileName}' add file to index
+examine the history and state:
+- 'mygit log' show commits history
+- 'mygit status' display status of files in current directory
+- 'mygit diff' show differences in file content
+- 'mygit hash-object {fileName}' display hash of a file
+grow and tweak your history:
+- 'mygit branch' display all branches
+- 'mygit branch {branchName}' create branch
+- 'mygit commit -m {commitName}' create commit
+- 'mygit checkout {commitName}' (doesn't support switching branches yet) change current commit)" << std::endl;
 }
 
 
