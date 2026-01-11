@@ -2,25 +2,32 @@
 
 My own simple git implementation
 
-Available commands:
+### Available commands:
+
 start or delete a working area:
 
 - 'mygit init' initialize mygit folder structure or reinitialize existing one
-- 'mygit _erase' delete entire mygit repository (debug)  
-  work on the current change:
-- 'mygit add {fileName}' add file to index  
-  examine the history and state:
+- 'mygit _erase' delete entire mygit repository (debug)
+
+work on the current change:
+
+- 'mygit add {fileName}' add file to index
+
+examine the history and state:
+
 - 'mygit log' show commits history
 - 'mygit status' display status of files in current directory
 - 'mygit diff' show differences in file content
-- 'mygit hash-object {fileName}' display hash of a file  
-  grow and tweak your history:
+- 'mygit hash-object {fileName}' display hash of a file
+
+grow and tweak your history:
+
 - 'mygit branch' display all branches
 - 'mygit branch {branchName}' create branch
 - 'mygit commit -m {commitName}' create commit
 - 'mygit checkout {commitName}' (doesn't support switching branches yet) change current commit
 
-mygit folder structure with sample txt file commited:
+### mygit folder structure with sample txt file commited:
 
 ```text
 hello.txt
@@ -34,7 +41,7 @@ hello.txt
 │   └── main
 ```
 
-Initially planned features:
+### Initially planned features:
 
 - make 'mygit init' create folder .mygit
 - make 'mygit status' display the status of current folders repo
