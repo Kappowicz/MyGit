@@ -3,9 +3,9 @@
 #include <filesystem> //available from c++17
 #include <fstream>
 #include <string>
-#include <sstream>
-#include <iomanip> //for hex conversion
 #include <print>
+#include <sstream>
+#include <format> //for hex conversion
 
 //colors defined to make output text colorful (used in './MyGit diff')
 #define RED     "\033[31m"
@@ -103,8 +103,6 @@ void initFile(const std::string &fileName) {
 
 std::string calculateHash(const std::string &fileName) //something like djb2
 {
-  constexpr int minHashSize = 5;
-
   std::ifstream file(fileName, std::ios::binary);
   if (!file.is_open()) {
     throw std::runtime_error("Failed to open the file: " + fileName);
@@ -116,11 +114,8 @@ std::string calculateHash(const std::string &fileName) //something like djb2
     count = ((count << 2) + count) + c;
   }
 
-  //convert hash to hexadecimal
-  std::stringstream ss;
-  ss << std::setfill('0') << std::setw(minHashSize) << std::hex << count;
-  std::string hexCount = ss.str();
-
+  constexpr int minHashSize = 15;
+  std::string hexCount = std::format("{:0{}x}", count, minHashSize);
   LOG("Hash for " << fileName << ": " << hexCount);
 
   return hexCount;
