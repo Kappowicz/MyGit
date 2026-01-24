@@ -15,11 +15,17 @@ int main(int argc, char *argv[]) {
   } else if (first == "init") {
     MyGitInit();
   } else if (first == "add") {
-    if (argc < 3) throw std::invalid_argument("Not enough arguments");
+    if (argc < 3) {
+      std::println(stderr, "Error: Not enough arguments provided.");
+      return 1;
+    }
     std::string second = argv[2];
     MyGitAdd(second);
   } else if (first == "commit") {
-    if (argc < 3) throw std::invalid_argument("Not enough arguments");
+    if (argc < 3) {
+      std::println(stderr, "Error: Not enough arguments provided.");
+      return 1;
+    }
     std::string second = argv[2];
     if (second == "-m") {
       //for now there is only -m parameter
@@ -43,11 +49,17 @@ int main(int argc, char *argv[]) {
   } else if (first == "log")
     MyGitLog();
   else if (first == "checkout") {
-    if (argc < 3) throw std::invalid_argument("Not enough arguments");
+    if (argc < 3) {
+      std::println(stderr, "Error: Not enough arguments provided.");
+      return 1;
+    }
     std::string second = argv[2];
     MyGitCheckout(second);
   } else if (first == "hash-object") {
-    if (argc < 3) throw std::invalid_argument("Not enough arguments");
+    if (argc < 3) {
+      std::println(stderr, "Error: Not enough arguments provided.");
+      return 1;
+    }
     std::string second = argv[2];
     std::string output = MyGitHashObject(second);
     if (!output.empty()) {
@@ -63,7 +75,10 @@ int main(int argc, char *argv[]) {
       MyGitBranch(second);
     }
   } else if (first == "switch") {
-    if (argc < 3) throw std::invalid_argument("Not enough arguments");
+    if (argc < 3) {
+      std::println(stderr, "Error: Not enough arguments provided.");
+      return 1;
+    }
     std::string second = argv[2];
     MyGitSwitch(second);
   } else {
