@@ -22,12 +22,17 @@ const std::string MAIN_BRANCH_NAME = "main";
 const std::string HEAD_NAME = "HEAD";
 
 const std::string INDEX_FILE_LOCALIZATION = MAIN_FOLDER_NAME + INDEX_FILE_NAME;
-const std::string OBJECTS_FOLDER_LOCALIZATION = MAIN_FOLDER_NAME + OBJECTS_FOLDER_NAME;
-const std::string TEMP_COMMIT_FILE_LOCALIZATION = MAIN_FOLDER_NAME + TEMP_COMMIT_FILE_NAME;
+const std::string OBJECTS_FOLDER_LOCALIZATION =
+    MAIN_FOLDER_NAME + OBJECTS_FOLDER_NAME;
+const std::string TEMP_COMMIT_FILE_LOCALIZATION =
+    MAIN_FOLDER_NAME + TEMP_COMMIT_FILE_NAME;
 
-const std::string REFS_FOLDER_LOCALIZATION = MAIN_FOLDER_NAME + REFS_FOLDER_NAME;
-const std::string MAIN_BRANCH_LOCALIZATION = REFS_FOLDER_LOCALIZATION + "/" + MAIN_BRANCH_NAME;
-const std::string HEAD_LOCALIZATION = REFS_FOLDER_LOCALIZATION + "/" + HEAD_NAME;
+const std::string REFS_FOLDER_LOCALIZATION =
+    MAIN_FOLDER_NAME + REFS_FOLDER_NAME;
+const std::string MAIN_BRANCH_LOCALIZATION =
+    REFS_FOLDER_LOCALIZATION + "/" + MAIN_BRANCH_NAME;
+const std::string HEAD_LOCALIZATION =
+    REFS_FOLDER_LOCALIZATION + "/" + HEAD_NAME;
 
 #if defined(_DEBUG) || !defined(NDEBUG)
 #define LOG(x) std::cout << x << std::endl
@@ -36,7 +41,8 @@ const std::string HEAD_LOCALIZATION = REFS_FOLDER_LOCALIZATION + "/" + HEAD_NAME
 #endif
 
 struct FileProperties {
-  FileProperties(const char &exec_char, std::string file_hash, std::string file_path)
+  FileProperties(const char &exec_char, std::string file_hash,
+                 std::string file_path)
     : execChar(exec_char),
       fileHash(std::move(file_hash)),
       filePath(std::move(file_path)) {
@@ -141,7 +147,8 @@ void MyGitAdd(const std::string &fileName) {
 void addToIndex(const std::string &fileName, const std::string &hash) {
   std::ofstream file(INDEX_FILE_LOCALIZATION, std::ios::app);
   if (!file.is_open()) {
-    throw std::runtime_error("Failed to open the file2: " + INDEX_FILE_LOCALIZATION);
+    throw std::runtime_error(
+      "Failed to open the file2: " + INDEX_FILE_LOCALIZATION);
   }
   std::ifstream file2(INDEX_FILE_LOCALIZATION);
   if (!file2.is_open()) {
@@ -160,7 +167,8 @@ void addToIndex(const std::string &fileName, const std::string &hash) {
 
   std::ofstream tempFile(INDEX_FILE_LOCALIZATION + ".temp");
   if (!tempFile.is_open()) {
-    throw std::runtime_error("Failed to open the file2: " + INDEX_FILE_LOCALIZATION);
+    throw std::runtime_error(
+      "Failed to open the file2: " + INDEX_FILE_LOCALIZATION);
   }
 
   if (fileFound) {
@@ -169,26 +177,31 @@ void addToIndex(const std::string &fileName, const std::string &hash) {
     for (auto const &[execChar, fileHash, filePath]: fileProperties) {
       if (filePath == fileName) {
         std::println("Changing only hash of the file in index");
-        output = "file " + std::string{execChar} + " " + calculateHash(filePath) + " " + filePath + "\n";
+        output = "file " + std::string{execChar} + " " + calculateHash(filePath)
+                 + " " + filePath + "\n";
         tempFile.write(output.c_str(), output.size());
       } else {
-        output = "file " + std::string{execChar} + " " + fileHash + " " + filePath + "\n";
+        output = "file " + std::string{execChar} + " " + fileHash + " " +
+                 filePath + "\n";
         tempFile.write(output.c_str(), output.size());
       }
     }
     tempFile.close();
     std::filesystem::copy_file(INDEX_FILE_LOCALIZATION + ".temp",
-                               INDEX_FILE_LOCALIZATION, std::filesystem::copy_options::overwrite_existing);
+                               INDEX_FILE_LOCALIZATION,
+                               std::filesystem::copy_options::overwrite_existing);
   } else {
     //write at the end of the file
     std::filesystem::path filePath(fileName);
     std::filesystem::file_status status = std::filesystem::status(filePath);
     std::filesystem::perms permissions = status.permissions();
     std::string currExecChar =
-        (permissions & std::filesystem::perms::owner_exec) != std::filesystem::perms::none
+        (permissions & std::filesystem::perms::owner_exec) !=
+        std::filesystem::perms::none
           ? EXEC_CHAR
           : NOT_EXEC_CHAR;
-    std::string output = "file " + currExecChar + " " + hash + " " + fileName + "\n";
+    std::string output = "file " + currExecChar + " " + hash + " " + fileName +
+                         "\n";
     file.write(output.c_str(), output.size());
   }
 
@@ -205,16 +218,19 @@ Initial commit with siema.txt and ok.png        <- this commit's message
    */
   if (!std::filesystem::exists(INDEX_FILE_LOCALIZATION)) {
     std::println("File {} doesn't exist!", INDEX_FILE_LOCALIZATION);
-    std::println("Maybe you didn't './MyGit add' any files after './MyGit init'?");
+    std::println(
+      "Maybe you didn't './MyGit add' any files after './MyGit init'?");
     return;
   }
   std::ifstream file(INDEX_FILE_LOCALIZATION, std::ios::binary);
   if (!file.is_open()) {
-    throw std::runtime_error("Failed to open the file: " + INDEX_FILE_LOCALIZATION);
+    throw std::runtime_error(
+      "Failed to open the file: " + INDEX_FILE_LOCALIZATION);
   }
   std::ofstream tempCommitFile(TEMP_COMMIT_FILE_LOCALIZATION, std::ios::binary);
   if (!tempCommitFile.is_open()) {
-    throw std::runtime_error("Failed to open the file: " + TEMP_COMMIT_FILE_LOCALIZATION);
+    throw std::runtime_error(
+      "Failed to open the file: " + TEMP_COMMIT_FILE_LOCALIZATION);
   }
 
   LOG("new commit's message: " << message);
@@ -227,7 +243,8 @@ Initial commit with siema.txt and ok.png        <- this commit's message
   std::string headFileHash;
   getline(headFileHashFile, headFileHash);
   LOG(OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash);
-  std::ifstream headFile(OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash, std::ios::binary);
+  std::ifstream headFile(OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash,
+                         std::ios::binary);
   if (!headFile.is_open()) {
     return;
   }
@@ -275,19 +292,22 @@ Initial commit with siema.txt and ok.png        <- this commit's message
   }
 
   if (std::filesystem::is_empty(MAIN_BRANCH_LOCALIZATION)) {
-    std::println("There is no commit in main branch, setting current commit to HEAD");
+    std::println(
+      "There is no commit in main branch, setting current commit to HEAD");
   } else {
     std::println("Changing main branch HEAD to this commit");
   }
   std::fstream mainBranchFile(MAIN_BRANCH_LOCALIZATION, std::ios::out);
   if (!mainBranchFile.is_open()) {
-    throw std::runtime_error("Failed to open the file: " + MAIN_BRANCH_LOCALIZATION);
+    throw std::runtime_error(
+      "Failed to open the file: " + MAIN_BRANCH_LOCALIZATION);
   }
   std::string calculatedHash = calculateHash(TEMP_COMMIT_FILE_LOCALIZATION);
   mainBranchFile << calculatedHash << std::endl;
   writeToHead(calculatedHash);
   std::filesystem::copy_file(TEMP_COMMIT_FILE_LOCALIZATION,
-                             OBJECTS_FOLDER_LOCALIZATION + "/" + calculatedHash);
+                             OBJECTS_FOLDER_LOCALIZATION + "/" +
+                             calculatedHash);
 
   std::filesystem::remove(TEMP_COMMIT_FILE_LOCALIZATION);
 }
@@ -316,7 +336,8 @@ void MyGitStatus() {
   }
 
   if (std::filesystem::is_empty(MAIN_BRANCH_LOCALIZATION)) {
-    std::println("There is no commit in branch main, checking working directory vs index diff");
+    std::println(
+      "There is no commit in branch main, checking working directory vs index diff");
   } else {
     std::println("Checking HEAD vs index diff");
     compareHeadAndIndex(filesFromIndex);
@@ -338,9 +359,12 @@ void compareHeadAndIndex(const std::vector<FileProperties> &filesFromIndex) {
   }
   std::string headFileHash;
   getline(headFileHashFile, headFileHash);
-  if (headFileHash.empty()) throw std::runtime_error("Empty hash file even if in previous function it wasn't");
+  if (headFileHash.empty())
+    throw std::runtime_error(
+      "Empty hash file even if in previous function it wasn't");
   LOG(OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash);
-  std::ifstream headFile(OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash, std::ios::binary);
+  std::ifstream headFile(OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash,
+                         std::ios::binary);
   if (!headFile.is_open()) {
     return;
   }
@@ -355,7 +379,8 @@ void compareHeadAndIndex(const std::vector<FileProperties> &filesFromIndex) {
   //not like now it is showing as if all lines were changed
   //TODO: delete this ugly n^2 loop for hashmap or something better
   for (auto const &[execCharHead, fileHashHead, filePathHead]: filesFromHead) {
-    for (auto const &[execCharIndex, fileHashIndex, filePathIndex]: filesFromIndex) {
+    for (auto const &[execCharIndex, fileHashIndex, filePathIndex]:
+         filesFromIndex) {
       if (filePathHead == filePathIndex) {
         if (fileHashHead == fileHashIndex) {
           std::println("{} is the same in index and head", filePathHead);
@@ -419,14 +444,16 @@ void MyGitLog() {
   std::string headFileHash;
   getline(headFileHashFile, headFileHash);
   std::println("{}/{}", OBJECTS_FOLDER_LOCALIZATION, headFileHash);
-  std::ifstream headFile(OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash, std::ios::binary);
+  std::ifstream headFile(OBJECTS_FOLDER_LOCALIZATION + "/" + headFileHash,
+                         std::ios::binary);
   if (!headFile.is_open()) {
     return;
   }
 
   std::string nextCommitToFind = headFileHash;
   while (!nextCommitToFind.empty()) {
-    std::ifstream nextCommit(OBJECTS_FOLDER_LOCALIZATION + "/" + nextCommitToFind, std::ios::binary);
+    std::ifstream nextCommit(
+      OBJECTS_FOLDER_LOCALIZATION + "/" + nextCommitToFind, std::ios::binary);
     if (!headFile.is_open()) {
       return;
     }
@@ -468,7 +495,8 @@ void MyGitLog() {
 void MyGitCheckout(const std::string &commitName, bool isSwitchingBranch) {
   LOG("checkout " << commitName);
 
-  std::ifstream commitFile(OBJECTS_FOLDER_LOCALIZATION + "/" + commitName, std::ios::binary);
+  std::ifstream commitFile(OBJECTS_FOLDER_LOCALIZATION + "/" + commitName,
+                           std::ios::binary);
   if (!commitFile.is_open()) {
     std::println("commit not found");
     return;
@@ -495,9 +523,11 @@ void MyGitCheckout(const std::string &commitName, bool isSwitchingBranch) {
   std::vector<FileProperties> fileProperties = getMyGitFiles(commitFile);
   for (auto const &file: fileProperties) {
     LOG(file.filePath);
-    std::filesystem::copy_file(OBJECTS_FOLDER_LOCALIZATION + "/" + file.fileHash, file.filePath,
-                               std::filesystem::copy_options::overwrite_existing);
-    LOG("copied file from; " << OBJECTS_FOLDER_LOCALIZATION + "/" + file.fileHash << " to: " + file.filePath);
+    std::filesystem::copy_file(
+      OBJECTS_FOLDER_LOCALIZATION + "/" + file.fileHash, file.filePath,
+      std::filesystem::copy_options::overwrite_existing);
+    LOG("copied file from; " << OBJECTS_FOLDER_LOCALIZATION + "/" + file.
+      fileHash << " to: " + file.filePath);
   }
 }
 
@@ -548,9 +578,11 @@ void MyGitDiff() {
         return;
       }
 
-      std::ifstream fileFromIndex(OBJECTS_FOLDER_LOCALIZATION + "/" + fileHash, std::ios::binary);
+      std::ifstream fileFromIndex(OBJECTS_FOLDER_LOCALIZATION + "/" + fileHash,
+                                  std::ios::binary);
       if (!fileFromIndex.is_open()) {
-        std::println("file {}/{} doesn't exist!", OBJECTS_FOLDER_LOCALIZATION, fileHash);
+        std::println("file {}/{} doesn't exist!", OBJECTS_FOLDER_LOCALIZATION,
+                     fileHash);
         return;
       }
       std::string indexLine;
@@ -576,12 +608,14 @@ void MyGitDiff() {
 }
 
 void MyGitBranch() {
-  for (auto file: std::filesystem::directory_iterator(REFS_FOLDER_LOCALIZATION)) {
+  for (auto file:
+       std::filesystem::directory_iterator(REFS_FOLDER_LOCALIZATION)) {
     if (file.path().filename() == HEAD_NAME) continue;
 
     std::ifstream tempFile(file.path());
     if (!tempFile.is_open()) {
-      throw std::runtime_error("Failed to open the file: " + INDEX_FILE_LOCALIZATION);
+      throw std::runtime_error(
+        "Failed to open the file: " + INDEX_FILE_LOCALIZATION);
     }
     std::string branchCommitHash;
     getline(tempFile, branchCommitHash);
@@ -590,17 +624,22 @@ void MyGitBranch() {
 }
 
 void MyGitBranch(const std::string &branchName) {
-  if (std::ofstream headFile(REFS_FOLDER_LOCALIZATION + "/" + branchName, std::ios::app); !headFile.is_open()) {
-    throw std::runtime_error("Failed to open the file: " + REFS_FOLDER_LOCALIZATION + "/" + branchName);
+  if (std::ofstream headFile(REFS_FOLDER_LOCALIZATION + "/" + branchName,
+                             std::ios::app); !headFile.is_open()) {
+    throw std::runtime_error(
+      "Failed to open the file: " + REFS_FOLDER_LOCALIZATION + "/" +
+      branchName);
   }
   std::println("branch {} created", branchName);
 }
 
 void MyGitSwitch(const std::string &branchName) {
   std::println("{}", getFromHead());
-  std::ifstream newBranchFile(REFS_FOLDER_LOCALIZATION + "/" + branchName, std::ios::binary);
+  std::ifstream newBranchFile(REFS_FOLDER_LOCALIZATION + "/" + branchName,
+                              std::ios::binary);
   if (!newBranchFile.is_open()) {
-    std::println("Branch {}/{} doesn't exist!", REFS_FOLDER_LOCALIZATION, branchName);
+    std::println("Branch {}/{} doesn't exist!", REFS_FOLDER_LOCALIZATION,
+                 branchName);
     return;
   }
   std::string newBranchHashLine;

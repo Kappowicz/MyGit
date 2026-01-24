@@ -1,0 +1,11 @@
+#config inspired by google's code style guide
+[*]
+end_of_line = lf #use /n as an line end char
+insert_final_newline = true
+charset = utf-8
+
+[*.{cpp,h,cc,hpp}]
+indent_style = space
+indent_size = 2
+tab_width = 2
+max_line_length = 80
