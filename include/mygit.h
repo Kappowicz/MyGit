@@ -1,13 +1,17 @@
 #pragma once
 #include "mygit.h"
 #include <filesystem>
-#include <iomanip>
+#include <vector>
 
 struct FileProperties;
 
 void printHelp();
 
 void MyGitInit();
+
+void initDirectory(const std::string &directory);
+
+void initFile(const std::string &fileName);
 
 std::string calculateHash(const std::string &fileName);
 

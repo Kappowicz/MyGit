@@ -11,16 +11,16 @@ jobs:
     runs-on: windows-latest #for now on windows
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Compiling
-      run: clang++ src/main.cpp src/mygit.cpp -o mygit.exe -std=c++17 -Iinclude
-      
-    - name: Run
-      run: ./mygit.exe
+      - name: Compiling
+        run: clang++ src/main.cpp src/mygit.cpp -o mygit.exe -std=c++26 -Iinclude
 
-    - name: Share
-      uses: actions/upload-artifact@v4
-      with:
-        name: program-windows
-        path: mygit.exe
+      - name: Run
+        run: ./mygit.exe
+
+      - name: Share
+        uses: actions/upload-artifact@v4
+        with:
+          name: program-windows
+          path: mygit.exe

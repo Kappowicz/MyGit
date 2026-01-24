@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[]) {
   if (argc == 1) {
-    std::cout << "start with 'mygit.exe --help'" << std::endl;
+    std::println("start with 'mygit.exe --help'");
     printHelp();
     return 0;
   }
@@ -25,13 +25,13 @@ int main(int argc, char *argv[]) {
       //for now there is only -m parameter
       std::string message = argv[3];
       if (message.empty()) {
-        std::cout << "Commit message can't be empty!" << std::endl;
+        std::println("Commit message can't be empty!");
       } else {
         MyGitCommit(message);
       }
     } else {
-      std::cout << "Not implemented mygit commit parameter: " << second << std::endl;
-      std::cout << "Did you mean parameter '-m' (message)?" << std::endl;
+      std::println("Not implemented mygit commit parameter: {}", second);
+      std::println("Did you mean parameter '-m' (message)?");
     }
   } else if (first == "_erase") {
     //debug purpose only, doesn't exist in real git so starts with '_'
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     std::string second = argv[2];
     std::string output = MyGitHashObject(second);
     if (!output.empty()) {
-      std::cout << output << std::endl;
+      std::println("{}", output);
     }
   } else if (first == "diff") {
     MyGitDiff();
@@ -67,8 +67,8 @@ int main(int argc, char *argv[]) {
     std::string second = argv[2];
     MyGitSwitch(second);
   } else {
-    std::cout << "Command '" << first << "' not found" << std::endl;
-    if (first == "erase") std::cout << "Did you mean '_erase'?" << std::endl;
+    std::println("Command {} not found", first);
+    if (first == "erase") std::println("Did you mean '_erase'?");
   }
 
   return 0;
