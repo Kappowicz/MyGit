@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(include)
 
-add_executable(mygit
+add_executable(MyGit
         include/mygit.h
         src/main.cpp
         src/mygit.cpp)
