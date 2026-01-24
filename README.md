@@ -1,6 +1,6 @@
 # MyGit
 
-My own simple git implementation
+My own simple git implementation  
 I use cpp26 (btw)
 
 ### Available commands:
