@@ -8,9 +8,9 @@ void printHelp();
 
 void MyGitInit();
 
-void initDirectory(const std::string &directory);
+void initDirectory(const std::filesystem::path &directoryPath);
 
-void initFile(const std::string &fileName);
+void initFile(const std::filesystem::path &fileName);
 
 std::string calculateHash(const std::string &fileName);
 
