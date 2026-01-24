@@ -1,6 +1,6 @@
 #include "mygit.h"
 #include <string>
-#include <iostream>
+#include <print>
 
 int main(int argc, char *argv[]) {
   if (argc == 1) {

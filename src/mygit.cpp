@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip> //for hex conversion
+#include <print>
 
 //colors defined to make std::cout text colorful (used in './MyGit diff')
 #define RED     "\033[31m"
