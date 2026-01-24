@@ -13,15 +13,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install GCC 14
+      - name: Install Clang 18 and Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-14 g++-14
+          sudo apt-get install -y clang-18 g++-14
 
       - name: Configure CMake
         env:
-          CC: gcc-14
-          CXX: g++-14
+          CC: clang-18
+          CXX: clang++-18
         run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 
       - name: Compiling
