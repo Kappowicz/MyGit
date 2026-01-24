@@ -1,5 +1,4 @@
 #pragma once
-#include "mygit.h"
 #include <filesystem>
 #include <vector>
 
@@ -31,7 +30,8 @@ std::vector<FileProperties> getMyGitFiles(std::ifstream &file);
 
 void MyGitLog();
 
-void MyGitCheckout(const std::string &commitName, bool isSwitchingBranch = false);
+void MyGitCheckout(const std::string &commitName,
+                   bool isSwitchingBranch = false);
 
 void writeToHead(const std::string &message);
 

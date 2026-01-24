@@ -41,13 +41,6 @@ const std::string HEAD_LOCALIZATION =
 #endif
 
 struct FileProperties {
-  FileProperties(const char &exec_char, std::string file_hash,
-                 std::string file_path)
-    : execChar(exec_char),
-      fileHash(std::move(file_hash)),
-      filePath(std::move(file_path)) {
-  }
-
   char execChar;
   std::string fileHash;
   std::string filePath;
@@ -88,7 +81,7 @@ void initDirectory(const std::string &directory) {
   if (std::filesystem::is_directory(directory)) {
     std::println("folder {} exists", directory);
   } else {
-    if (std::filesystem::create_directory(directory)) {
+    if (std::filesystem::create_directories(directory)) {
       std::println("folder {} created", directory);
     } else {
       std::println("folder {} failed to create", directory);
@@ -101,7 +94,7 @@ void initFile(const std::string &fileName) {
     std::println("file {} exists", fileName);
     return;
   }
-  if (std::ofstream file(fileName, std::ios::app); !file.is_open()) {
+  if (std::ofstream file(fileName); !file.is_open()) {
     throw std::runtime_error("Failed to open the file: " + fileName);
   }
   std::println("file {} created", fileName);
@@ -624,8 +617,8 @@ void MyGitBranch() {
 }
 
 void MyGitBranch(const std::string &branchName) {
-  if (std::ofstream headFile(REFS_FOLDER_LOCALIZATION + "/" + branchName,
-                             std::ios::app); !headFile.is_open()) {
+  if (std::ofstream headFile(REFS_FOLDER_LOCALIZATION + "/" + branchName);
+    !headFile.is_open()) {
     throw std::runtime_error(
       "Failed to open the file: " + REFS_FOLDER_LOCALIZATION + "/" +
       branchName);
