@@ -1,4 +1,4 @@
-#include <iostream>
+#include <iostream> // used for std::cout in LOG(x)
 #include "mygit.h"
 #include <filesystem> //available from c++17
 #include <fstream>
@@ -7,7 +7,7 @@
 #include <iomanip> //for hex conversion
 #include <print>
 
-//colors defined to make std::cout text colorful (used in './MyGit diff')
+//colors defined to make output text colorful (used in './MyGit diff')
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
 
