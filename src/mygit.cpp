@@ -598,12 +598,20 @@ std::string getFromHead() {
   return output;
 }
 
-std::string MyGitHashObject(const std::string &filename) {
-  if (std::ifstream fileToCheck(filename); !fileToCheck.is_open()) {
-    std::println("File {} doesn't exist!", filename);
-    return {};
+void MyGitHashObject(const std::vector<std::string_view> &arguments) {
+  if (arguments.size() < 3 || arguments.size() > 3) {
+    std::println(stderr, "Wrong number of arguments!");
+    std::println(stderr, "Usage: ./mygit hash-object <file>");
+    return;
   }
-  return calculateHash(filename);
+
+  std::filesystem::path filePath = arguments[2];
+  if (std::ifstream fileToCheck(filePath); !fileToCheck.is_open()) {
+    std::println(stderr, "File '{}' doesn't exist!", filePath.string());
+    return;
+  }
+
+  std::println("{}", calculateHash(filePath));
 }
 
 void MyGitDiff() {
@@ -654,7 +662,7 @@ void MyGitDiff() {
 }
 
 void MyGitBranch() {
-  for (auto file: std::filesystem::directory_iterator(REFS_FOLDER_PATH)) {
+  for (const auto &file: std::filesystem::directory_iterator(REFS_FOLDER_PATH)) {
     if (file.path().filename() == HEAD_NAME) continue;
 
     std::ifstream tempFile(file.path());
@@ -667,7 +675,14 @@ void MyGitBranch() {
   }
 }
 
-void MyGitBranch(const std::string &branchName) {
+void MyGitBranch(const std::vector<std::string_view> &arguments) {
+  if (arguments.size() < 3 || arguments.size() > 3) {
+    std::println(stderr, "Wrong number of arguments!");
+    std::println(stderr, "Usage: ./mygit branch <branchName>");
+    return;
+  }
+
+  std::string_view branchName = arguments[2];
   std::filesystem::path branchPath = REFS_FOLDER_PATH / branchName;
   if (std::ofstream headFile(branchPath); !headFile.is_open()) {
     throw std::runtime_error(
@@ -676,7 +691,14 @@ void MyGitBranch(const std::string &branchName) {
   std::println("branch {} created", branchName);
 }
 
-void MyGitSwitch(const std::string &branchName) {
+void MyGitSwitch(const std::vector<std::string_view> &arguments) {
+  if (arguments.size() < 3 || arguments.size() > 3) {
+    std::println(stderr, "Wrong number of arguments!");
+    std::println(stderr, "Usage: ./mygit branch <branchName>");
+    return;
+  }
+
+  std::string_view branchName = arguments[2];
   std::println("{}", getFromHead());
   std::filesystem::path branchPath = REFS_FOLDER_PATH / branchName;
   std::ifstream newBranchFile(branchPath, std::ios::binary);

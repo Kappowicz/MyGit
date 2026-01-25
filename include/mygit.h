@@ -40,12 +40,12 @@ void writeToHead(const std::string &message);
 
 std::string getFromHead();
 
-std::string MyGitHashObject(const std::string &filename);
+void MyGitHashObject(const std::vector<std::string_view> &arguments);
 
 void MyGitDiff();
 
 void MyGitBranch();
 
-void MyGitBranch(const std::string &branchName);
+void MyGitBranch(const std::vector<std::string_view> &arguments);
 
-void MyGitSwitch(const std::string &branchName);
+void MyGitSwitch(const std::vector<std::string_view> &arguments);

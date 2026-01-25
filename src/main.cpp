@@ -25,11 +25,14 @@ int main(int argc, char *argv[]) {
     {"_erase", [](const auto &args) { MyGitErase(); }},
     {"status", [](const auto &args) { MyGitStatus(); }},
     {"log", [](const auto &args) { MyGitLog(); }},
-    //{"checkout", [](const auto &args) { MyGitCheckout(val); }},
-    //{"hash-object", [](const auto &args) { MyGitHashObject(val); }},
-    {"diff", [](const auto &args) { MyGitDiff(); }},
-    //{"branch", [](const auto &args) { MyGitBranch(val); }},
-    //{"switch", [](const auto &args) { MyGitSwitch(val); }},
+    //{"checkout", [](const auto &args) { MyGitCheckout(args); }},
+    {"hash-object", [](const auto &args) { MyGitHashObject(args); }},
+    {"diff", [](const auto &args) { MyGitDiff(); }}, {
+      "branch", [](const auto &args) {
+        if (args.size() > 2) { MyGitBranch(args); } else { MyGitBranch(); }
+      }
+    },
+    {"switch", [](const auto &args) { MyGitSwitch(args); }},
   };
   const std::string commandToRun = argv[1];
   if (const auto it = commands.find(commandToRun); it != commands.end()) {
@@ -123,6 +126,5 @@ int main(int argc, char *argv[]) {
     std::println("Command {} not found", first);
     if (first == "erase") std::println("Did you mean '_erase'?");
   }*/
-
   return 0;
 }
