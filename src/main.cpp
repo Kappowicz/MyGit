@@ -1,17 +1,49 @@
 #include "mygit.h"
 #include <string>
 #include <print>
+#include <map>
+#include <functional>
+#include <utility>
 
 int main(int argc, char *argv[]) {
   if (argc == 1) {
     std::println("start with 'mygit.exe --help'");
-    printHelp();
+    MyGitHelp();
     return 0;
   }
 
+  //convert input chars to string_view for easier processing
+  const std::vector<std::string_view> arguments(argv, argv + argc);
+
+  //TODO: add aliases and 'did you mean?'
+  //for small data sets its better to not use 'unordered' types
+  std::map<std::string, std::function<void(
+        std::vector<std::string_view>)> >
+      commands = {
+        {"--help", [](const auto &args) { MyGitHelp(); }},
+        {"init", [](const auto &args) { MyGitInit(); }},
+        {"add", [](const auto &args) { MyGitAdd(args); }},
+        //{"commit", [](const auto &args) { MyGitCommit(val); }},
+        {"_erase", [](const auto &args) { MyGitErase(); }},
+        {"status", [](const auto &args) { MyGitStatus(); }},
+        {"log", [](const auto &args) { MyGitLog(); }},
+        //{"checkout", [](const auto &args) { MyGitCheckout(val); }},
+        //{"hash-object", [](const auto &args) { MyGitHashObject(val); }},
+        {"diff", [](const auto &args) { MyGitDiff(); }},
+        //{"branch", [](const auto &args) { MyGitBranch(val); }},
+        //{"switch", [](const auto &args) { MyGitSwitch(val); }},
+      };
+
+  if (const auto it = commands.find(argv[1]); it != commands.end()) {
+    const std::string commandToRun = argv[1];
+    commands[commandToRun](arguments);
+  } else {
+    std::println(stderr, "Error: Command '{}' not found!", argv[1]);
+  }
+  /*
   std::string first = argv[1];
   if (first == "--help") {
-    printHelp();
+    MyGitHelp();
   } else if (first == "init") {
     MyGitInit();
   } else if (first == "add") {
@@ -84,7 +116,7 @@ int main(int argc, char *argv[]) {
   } else {
     std::println("Command {} not found", first);
     if (first == "erase") std::println("Did you mean '_erase'?");
-  }
+  }*/
 
   return 0;
 }

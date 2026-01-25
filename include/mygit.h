@@ -1,20 +1,21 @@
 #pragma once
 #include <filesystem>
 #include <vector>
+#include <expected>
 
 struct FileProperties;
 
-void printHelp();
+void MyGitHelp();
 
 void MyGitInit();
 
 void initDirectory(const std::filesystem::path &directoryPath);
 
-void initFile(const std::filesystem::path &fileName);
+void initFile(const std::filesystem::path &filePath);
 
-std::string calculateHash(const std::string &fileName);
+std::string calculateHash(const std::filesystem::path &filePath);
 
-void MyGitAdd(const std::string &fileName);
+void MyGitAdd(const std::vector<std::string_view> &arguments);
 
 void addToIndex(const std::string &fileName, const std::string &hash);
 

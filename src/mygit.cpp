@@ -1,4 +1,4 @@
-#include <iostream> // used for std::cout in LOG(x)
+#include <iostream> // used for std::cout in LOG(x) macro
 #include "mygit.h"
 #include <filesystem> //available from c++17
 #include <fstream>
@@ -6,11 +6,13 @@
 #include <print>
 #include <sstream>
 #include <format> //for hex conversion
+#include <expected>
 
 //colors defined to make output text colorful (used in './MyGit diff')
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
 
+//using string_view for optimization
 constexpr std::string_view MAIN_FOLDER_NAME = ".mygit";
 constexpr std::string_view OBJECTS_FOLDER_NAME = "objects";
 constexpr std::string_view REFS_FOLDER_NAME = "refs";
@@ -51,7 +53,7 @@ struct FileProperties {
   std::string filePath;
 };
 
-void printHelp() {
+void MyGitHelp() {
   //inspired by real git --help
   std::println("{}", R"(this is my simple implementation of git
 start by initializing the repo with './MyGit init'
@@ -60,17 +62,17 @@ start or delete a working area:
 - 'mygit init' initialize mygit folder structure or reinitialize existing one
 - 'mygit _erase' delete entire mygit repository (debug)
 work on the current change:
-- 'mygit add {fileName}' add file to index
+- 'mygit add <fileName>' add file to index
 examine the history and state:
 - 'mygit log' show commits history
 - 'mygit status' display status of files in current directory
 - 'mygit diff' show differences in file content
-- 'mygit hash-object {fileName}' display hash of a file
+- 'mygit hash-object <fileName>' display hash of a file
 grow and tweak your history:
 - 'mygit branch' display all branches
-- 'mygit branch {branchName}' create branch
-- 'mygit commit -m {commitName}' create commit
-- 'mygit checkout {commitName}' (doesn't support switching branches yet) change current commit)");
+- 'mygit branch <branchName>' create branch
+- 'mygit commit -m <commitName>' create commit
+- 'mygit checkout <commitName>' (doesn't support switching branches yet) change current commit)");
 }
 
 void MyGitInit() {
@@ -105,11 +107,12 @@ void initFile(const std::filesystem::path &filePath) {
   std::println("file {} created", filePath.string());
 }
 
-std::string calculateHash(const std::string &fileName) //something like djb2
-{
-  std::ifstream file(fileName, std::ios::binary);
+//TODO: add unexpected
+//something like djb2
+std::string calculateHash(const std::filesystem::path &filePath) {
+  std::ifstream file(filePath, std::ios::binary);
   if (!file.is_open()) {
-    throw std::runtime_error("Failed to open the file: " + fileName);
+    throw std::runtime_error("Failed to open the file: " + filePath.string());
   }
 
   unsigned long long count = 1;
@@ -118,28 +121,47 @@ std::string calculateHash(const std::string &fileName) //something like djb2
     count = ((count << 2) + count) + c;
   }
 
-  constexpr int minHashSize = 15;
+  constexpr int minHashSize = 5;
   std::string hexCount = std::format("{:0{}x}", count, minHashSize);
   LOG("Hash for " << fileName << ": " << hexCount);
 
   return hexCount;
 }
 
-void MyGitAdd(const std::string &fileName) {
-  if (!std::filesystem::exists(MAIN_FOLDER_PATH)) {
-    std::println("Folder {} doesn't exist!", MAIN_FOLDER_PATH.string());
-    std::println("Maybe you didn't './MyGit init'?");
+//TODO: convert exceptions to unexpected
+void MyGitAdd(const std::vector<std::string_view> &arguments) {
+  if (arguments.size() < 3 || arguments.size() > 4) {
+    std::println(stderr, "Wrong number of arguments!");
+    std::println(stderr, "Usage: ./mygit add <fileName>");
     return;
   }
-  const std::string hash = calculateHash(fileName);
+
+  if (!std::filesystem::exists(MAIN_FOLDER_PATH)) {
+    std::println(stderr, "Folder '{}' doesn't exist!",
+                 MAIN_FOLDER_PATH.string());
+    std::println(stderr, "Maybe you didn't './MyGit init'?");
+    return;
+  }
+
+  //TODO: delete all strings in my code (in this example convert to std::filesystem::path)
+  const std::filesystem::path filePath(arguments[2]);
+  if (!std::filesystem::exists(filePath)) {
+    std::println(stderr, "File '{}' doesn't exist!", filePath.string());
+    return;
+  }
+
+  const std::string hash = calculateHash(filePath);
   const std::filesystem::path fileDestination = OBJECTS_FOLDER_PATH / hash;
   if (std::filesystem::exists(fileDestination)) {
-    std::println("File {} already exists", fileDestination.string());
+    std::println(
+      "File with hash '{}' is already present in index. Nothing to do.",
+      fileDestination.filename().string());
     return;
   }
-  std::filesystem::copy_file(fileName, fileDestination);
 
-  addToIndex(fileName, hash);
+  std::filesystem::copy_file(filePath, fileDestination);
+
+  addToIndex(filePath, hash);
 }
 
 void addToIndex(const std::string &fileName, const std::string &hash) {
