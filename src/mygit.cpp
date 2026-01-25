@@ -30,9 +30,7 @@ const std::filesystem::path MAIN_FOLDER_PATH = MAIN_FOLDER_NAME;
 const std::filesystem::path INDEX_FILE_PATH = MAIN_FOLDER_PATH / INDEX_FILE_NAME;
 const std::filesystem::path OBJECTS_FOLDER_PATH = MAIN_FOLDER_PATH / OBJECTS_FOLDER_NAME;
 const std::filesystem::path TEMP_COMMIT_FILE_PATH = MAIN_FOLDER_PATH / TEMP_COMMIT_FILE_NAME;
-
 const std::filesystem::path REFS_FOLDER_PATH = MAIN_FOLDER_PATH / REFS_FOLDER_NAME;
-
 const std::filesystem::path MAIN_BRANCH_PATH = REFS_FOLDER_PATH / MAIN_BRANCH_NAME;
 const std::filesystem::path HEAD_PATH = REFS_FOLDER_PATH / HEAD_NAME;
 
@@ -57,7 +55,7 @@ std::vector<std::string_view> getCloseStrings(const std::string_view &target,
   for (char c: target) {
     targetStringCharFrequency[c]++;
   }
-  std::map<char, int> tempFrequency(targetStringCharFrequency);
+  const std::map tempFrequency(targetStringCharFrequency);
 
   std::map<char, int> currentStringCharFrequency;
   for (std::string_view currentCheckedCommand: available) {
@@ -68,12 +66,12 @@ std::vector<std::string_view> getCloseStrings(const std::string_view &target,
     }
 
     int diff = 0;
-    for (auto &[key, val]: targetStringCharFrequency) {
+    for (const auto &key: targetStringCharFrequency | std::views::keys) {
       diff += abs(currentStringCharFrequency[key] - targetStringCharFrequency[key]);
       currentStringCharFrequency[key] = 0;
       targetStringCharFrequency[key] = 0;
     }
-    for (auto &[key, val]: currentStringCharFrequency) {
+    for (const auto &key: currentStringCharFrequency | std::views::keys) {
       diff += abs(currentStringCharFrequency[key] - targetStringCharFrequency[key]);
       currentStringCharFrequency[key] = 0;
       targetStringCharFrequency[key] = 0;
@@ -135,7 +133,7 @@ void initFile(const std::filesystem::path &filePath) {
     std::println("file {} exists", filePath.string());
     return;
   }
-  if (std::ofstream file(filePath); !file.is_open()) {
+  if (const std::ofstream file(filePath); !file.is_open()) {
     throw std::runtime_error("Failed to open the file: " + filePath.string());
   }
   std::println("file {} created", filePath.string());
@@ -411,8 +409,8 @@ void compareHeadAndIndex(const std::vector<FileProperties> &filesFromIndex) {
   }
   std::string headFileHash;
   getline(headFileHashFile, headFileHash);
-  if (headFileHash.empty()) throw std::runtime_error(
-    "Empty hash file even if in previous function it wasn't");
+  if (headFileHash.empty())
+    throw std::runtime_error("Empty hash file even if in previous function it wasn't");
   LOG(OBJECTS_FOLDER_PATH.string() + "/" + headFileHash);
   std::filesystem::path headFileHashPath = OBJECTS_FOLDER_PATH / headFileHash;
   std::ifstream headFile(headFileHashPath, std::ios::binary);
@@ -468,7 +466,7 @@ std::vector<FileProperties> getMyGitFiles(std::ifstream &file) {
 
     char fileExecChar = result[1][0];
     std::string fileHash = result[2];
-    std::string filePath = result[3];
+    std::filesystem::path filePath = result[3];
 
     fileProperties.push_back({fileExecChar, fileHash, filePath});
     LOG(" File exec: " << fileExecChar);
@@ -540,7 +538,14 @@ void MyGitLog() {
   }
 }
 
-void MyGitCheckout(const std::string &commitName, bool isSwitchingBranch) {
+void MyGitCheckout(const std::vector<std::string_view> &arguments, bool isSwitchingBranch) {
+  if (arguments.size() < 3 || arguments.size() > 3) {
+    std::println(stderr, "Wrong number of arguments!");
+    std::println(stderr, "Usage: ./mygit checkout <commi>");
+    return;
+  }
+
+  std::string_view commitName = arguments[2];
   LOG("checkout " << commitName);
   std::filesystem::path commitPath = OBJECTS_FOLDER_PATH / commitName;
   std::ifstream commitFile(commitPath, std::ios::binary);
@@ -579,7 +584,7 @@ void MyGitCheckout(const std::string &commitName, bool isSwitchingBranch) {
   }
 }
 
-void writeToHead(const std::string &message) {
+void writeToHead(const std::string_view &message) {
   std::ofstream headFile(HEAD_PATH, std::ios::trunc);
   if (!headFile.is_open()) {
     std::println("HEAD file not found");
@@ -676,6 +681,11 @@ void MyGitBranch() {
 }
 
 void MyGitBranch(const std::vector<std::string_view> &arguments) {
+  if (arguments.size() == 2) {
+    MyGitBranch();
+    return;
+  }
+
   if (arguments.size() < 3 || arguments.size() > 3) {
     std::println(stderr, "Wrong number of arguments!");
     std::println(stderr, "Usage: ./mygit branch <branchName>");
@@ -700,7 +710,7 @@ void MyGitSwitch(const std::vector<std::string_view> &arguments) {
 
   std::string_view branchName = arguments[2];
   std::println("{}", getFromHead());
-  std::filesystem::path branchPath = REFS_FOLDER_PATH / branchName;
+  const std::filesystem::path branchPath = REFS_FOLDER_PATH / branchName;
   std::ifstream newBranchFile(branchPath, std::ios::binary);
   if (!newBranchFile.is_open()) {
     std::println("Branch {}/{} doesn't exist!", REFS_FOLDER_PATH.string(), branchName);
@@ -711,5 +721,5 @@ void MyGitSwitch(const std::vector<std::string_view> &arguments) {
   writeToHead(newBranchHashLine);
   std::println("new branch commit: {}", newBranchHashLine);
 
-  MyGitCheckout(newBranchHashLine, true);
+  MyGitCheckout({newBranchHashLine}, true);
 }
