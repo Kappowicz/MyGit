@@ -17,7 +17,8 @@ std::string calculateHash(const std::filesystem::path &filePath);
 
 void MyGitAdd(const std::vector<std::string_view> &arguments);
 
-void addToIndex(const std::string &fileName, const std::string &hash);
+void addToIndex(const std::filesystem::path &filePathToAdd,
+                const std::string &hash);
 
 void MyGitCommit(const std::string &message);
 

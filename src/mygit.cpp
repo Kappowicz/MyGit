@@ -50,7 +50,7 @@ const std::filesystem::path HEAD_PATH =
 struct FileProperties {
   char execChar;
   std::string fileHash;
-  std::string filePath;
+  std::filesystem::path filePath;
 };
 
 void MyGitHelp() {
@@ -164,24 +164,27 @@ void MyGitAdd(const std::vector<std::string_view> &arguments) {
   addToIndex(filePath, hash);
 }
 
-void addToIndex(const std::string &fileName, const std::string &hash) {
-  std::ofstream file(INDEX_FILE_PATH, std::ios::app);
-  if (!file.is_open()) {
+void addToIndex(const std::filesystem::path &filePathToAdd,
+                const std::string &hash) {
+  std::ofstream inputIndexFile(INDEX_FILE_PATH, std::ios::app);
+  if (!inputIndexFile.is_open()) {
     throw std::runtime_error(
       "Failed to open the file2: " + INDEX_FILE_PATH.string());
   }
-  std::ifstream file2(INDEX_FILE_PATH);
-  if (!file2.is_open()) {
-    std::println("Index file doesn't exist!");
+  std::ifstream outputIndexFile(INDEX_FILE_PATH);
+  if (!outputIndexFile.is_open()) {
+    std::println(stderr, "Index file doesn't exist!");
     return;
   }
 
-  std::vector<FileProperties> fileProperties = getMyGitFiles(file2);
+  std::vector<FileProperties> fileProperties = getMyGitFiles(outputIndexFile);
   bool fileFound = false;
-  for (auto const &[execChar, fileHash, filePath]: fileProperties) {
-    if (filePath == fileName) {
-      std::println("File name: {} already exists. ", filePath);
+  for (auto const &[execCharToCheck, fileHashToCheck, filePathToCheck]:
+       fileProperties) {
+    if (filePathToCheck == filePathToAdd) {
+      std::println("File name: {} already exists. ", filePathToAdd.string());
       fileFound = true;
+      break;
     }
   }
 
@@ -193,18 +196,22 @@ void addToIndex(const std::string &fileName, const std::string &hash) {
       "Failed to open the file2: " + INDEX_FILE_PATH.string());
   }
 
+  //TODO: refactor this to use temp file and replace existing index
+  //with temp with new values, it's safer and faster
   if (fileFound) {
     std::string output;
     //change only the hash of the file
-    for (auto const &[execChar, fileHash, filePath]: fileProperties) {
-      if (filePath == fileName) {
+    for (auto const &[execCharToCheck, fileHashToCheck, filePathToCheck]:
+         fileProperties) {
+      if (filePathToCheck == filePathToAdd) {
         std::println("Changing only hash of the file in index");
-        output = "file " + std::string{execChar} + " " + calculateHash(filePath)
-                 + " " + filePath + "\n";
+        output = "file " + std::string{execCharToCheck} + " " +
+                 calculateHash(filePathToAdd)
+                 + " " + filePathToAdd.string() + "\n";
         tempFile.write(output.c_str(), output.size());
       } else {
-        output = "file " + std::string{execChar} + " " + fileHash + " " +
-                 filePath + "\n";
+        output = "file " + std::string{execCharToCheck} + " " + fileHashToCheck
+                 + " " + filePathToAdd.string() + "\n";
         tempFile.write(output.c_str(), output.size());
       }
     }
@@ -213,17 +220,17 @@ void addToIndex(const std::string &fileName, const std::string &hash) {
                                std::filesystem::copy_options::overwrite_existing);
   } else {
     //write at the end of the file
-    std::filesystem::path filePath(fileName);
-    std::filesystem::file_status status = std::filesystem::status(filePath);
+    std::filesystem::file_status status =
+        std::filesystem::status(filePathToAdd);
     std::filesystem::perms permissions = status.permissions();
     std::string currExecChar =
         (permissions & std::filesystem::perms::owner_exec) !=
         std::filesystem::perms::none
           ? EXEC_CHAR
           : NOT_EXEC_CHAR;
-    std::string output = "file " + currExecChar + " " + hash + " " + fileName +
-                         "\n";
-    file.write(output.c_str(), output.size());
+    std::string output = "file " + currExecChar + " " + hash + " " +
+                         filePathToAdd.string() + "\n";
+    inputIndexFile.write(output.c_str(), output.size());
   }
 
   if (std::filesystem::remove(tempFilePath)) {
@@ -367,7 +374,7 @@ void MyGitStatus() {
 
   for (auto const &[execChar, fileHash, filePath]: filesFromIndex) {
     if (calculateHash(filePath) != fileHash) {
-      std::println("Changes not staged for commit: {}", filePath);
+      std::println("Changes not staged for commit: {}", filePath.string());
       std::println("{}", calculateHash(filePath));
       std::println("{}", fileHash);
     }
@@ -406,15 +413,17 @@ void compareHeadAndIndex(const std::vector<FileProperties> &filesFromIndex) {
          filesFromIndex) {
       if (filePathHead == filePathIndex) {
         if (fileHashHead == fileHashIndex) {
-          std::println("{} is the same in index and head", filePathHead);
+          std::println("{} is the same in index and head",
+                       filePathHead.string());
         } else {
-          std::println("modified: {}", filePathHead);
+          std::println("modified: {}", filePathHead.string());
         }
       } else if (fileHashHead == fileHashIndex) {
         if (filePathHead == filePathIndex) {
-          std::println("{} is the same in index and head", filePathHead);
+          std::println("{} is the same in index and head",
+                       filePathHead.string());
         } else {
-          std::println("name changed: {}", filePathHead);
+          std::println("name changed: {}", filePathHead.string());
         }
       }
     }
@@ -593,11 +602,11 @@ void MyGitDiff() {
 
   for (auto const &[execChar, fileHash, filePath]: filesFromIndex) {
     if (calculateHash(filePath) != fileHash) {
-      std::println("Changes not staged for commit: {}", filePath);
+      std::println("Changes not staged for commit: {}", filePath.string());
 
       std::ifstream file(filePath);
       if (!file.is_open()) {
-        std::println("File {} doesn't exist!", filePath);
+        std::println("File {} doesn't exist!", filePath.string());
         return;
       }
       std::filesystem::path fileHashPath = OBJECTS_FOLDER_PATH / fileHash;
