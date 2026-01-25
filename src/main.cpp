@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[]) {
   if (argc == 1) {
-    std::println("start with 'mygit.exe --help'");
+    std::println("start with 'mygit.exe --help': ");
     MyGitHelp();
     return 0;
   }
@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
   const std::vector<std::string_view> arguments(argv, argv + argc);
 
   //for small data sets its better to not use 'unordered' types
-  std::map<std::string, std::function<void(std::vector<std::string_view>)> > commands = {
+  std::map<std::string_view, std::function<void(std::vector<std::string_view>)> > commands = {
     {"--help", [](const auto &args) { MyGitHelp(); }},
     {"init", [](const auto &args) { MyGitInit(); }},
     {"add", [](const auto &args) { MyGitAdd(args); }},
@@ -30,9 +30,10 @@ int main(int argc, char *argv[]) {
     {"branch", [](const auto &args) { MyGitBranch(args); }},
     {"switch", [](const auto &args) { MyGitSwitch(args); }},
   };
-  const std::string commandToRun = argv[1];
+
+  const std::string_view commandToRun = argv[1];
   if (const auto it = commands.find(commandToRun); it != commands.end()) {
-    commands[commandToRun](arguments);
+    it->second(arguments);
   } else {
     std::println(stderr, "Error: Command '{}' not found!", argv[1]);
     //get all keys from commands map by using views
