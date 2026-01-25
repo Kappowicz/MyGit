@@ -17,13 +17,12 @@ int main(int argc, char *argv[]) {
 
   //TODO: add aliases and 'did you mean?'
   //for small data sets its better to not use 'unordered' types
-  std::map<std::string, std::function<void(
-        std::vector<std::string_view>)> >
+  std::map<std::string, std::function<void(std::vector<std::string_view>)> >
       commands = {
         {"--help", [](const auto &args) { MyGitHelp(); }},
         {"init", [](const auto &args) { MyGitInit(); }},
         {"add", [](const auto &args) { MyGitAdd(args); }},
-        //{"commit", [](const auto &args) { MyGitCommit(val); }},
+        {"commit", [](const auto &args) { MyGitCommit(args); }},
         {"_erase", [](const auto &args) { MyGitErase(); }},
         {"status", [](const auto &args) { MyGitStatus(); }},
         {"log", [](const auto &args) { MyGitLog(); }},

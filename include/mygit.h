@@ -20,7 +20,7 @@ void MyGitAdd(const std::vector<std::string_view> &arguments);
 void addToIndex(const std::filesystem::path &filePathToAdd,
                 const std::string &hash);
 
-void MyGitCommit(const std::string &message);
+void MyGitCommit(const std::vector<std::string_view> &arguments);
 
 void MyGitErase();
 
