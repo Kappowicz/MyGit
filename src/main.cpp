@@ -3,7 +3,7 @@
 #include <print>
 #include <map>
 #include <functional>
-#include <utility>
+#include <ranges>
 
 int main(int argc, char *argv[]) {
   if (argc == 1) {
@@ -17,27 +17,34 @@ int main(int argc, char *argv[]) {
 
   //TODO: add aliases and 'did you mean?'
   //for small data sets its better to not use 'unordered' types
-  std::map<std::string, std::function<void(std::vector<std::string_view>)> >
-      commands = {
-        {"--help", [](const auto &args) { MyGitHelp(); }},
-        {"init", [](const auto &args) { MyGitInit(); }},
-        {"add", [](const auto &args) { MyGitAdd(args); }},
-        {"commit", [](const auto &args) { MyGitCommit(args); }},
-        {"_erase", [](const auto &args) { MyGitErase(); }},
-        {"status", [](const auto &args) { MyGitStatus(); }},
-        {"log", [](const auto &args) { MyGitLog(); }},
-        //{"checkout", [](const auto &args) { MyGitCheckout(val); }},
-        //{"hash-object", [](const auto &args) { MyGitHashObject(val); }},
-        {"diff", [](const auto &args) { MyGitDiff(); }},
-        //{"branch", [](const auto &args) { MyGitBranch(val); }},
-        //{"switch", [](const auto &args) { MyGitSwitch(val); }},
-      };
-
-  if (const auto it = commands.find(argv[1]); it != commands.end()) {
-    const std::string commandToRun = argv[1];
+  std::map<std::string, std::function<void(std::vector<std::string_view>)> > commands = {
+    {"--help", [](const auto &args) { MyGitHelp(); }},
+    {"init", [](const auto &args) { MyGitInit(); }},
+    {"add", [](const auto &args) { MyGitAdd(args); }},
+    {"commit", [](const auto &args) { MyGitCommit(args); }},
+    {"_erase", [](const auto &args) { MyGitErase(); }},
+    {"status", [](const auto &args) { MyGitStatus(); }},
+    {"log", [](const auto &args) { MyGitLog(); }},
+    //{"checkout", [](const auto &args) { MyGitCheckout(val); }},
+    //{"hash-object", [](const auto &args) { MyGitHashObject(val); }},
+    {"diff", [](const auto &args) { MyGitDiff(); }},
+    //{"branch", [](const auto &args) { MyGitBranch(val); }},
+    //{"switch", [](const auto &args) { MyGitSwitch(val); }},
+  };
+  const std::string commandToRun = argv[1];
+  if (const auto it = commands.find(commandToRun); it != commands.end()) {
     commands[commandToRun](arguments);
   } else {
     std::println(stderr, "Error: Command '{}' not found!", argv[1]);
+    //get all keys from commands map by using views
+    std::vector<std::string_view> possibleCommands = getCloseStrings(
+      argv[1], commands | std::views::keys | std::ranges::to<std::vector<std::string_view> >());
+
+    if (!possibleCommands.empty()) {
+      std::println("Did you mean: '{}'?",
+                   possibleCommands | std::views::join_with(std::string_view("' or '")) |
+                   std::ranges::to<std::string>());
+    }
   }
   /*
   std::string first = argv[1];

@@ -1,5 +1,7 @@
 # MyGit
 
+# In progress of grand refactoring
+
 My own simple git implementation  
 I use cpp26 (btw)
 

@@ -6,7 +6,8 @@
 #include <print>
 #include <sstream>
 #include <format> //for hex conversion
-#include <expected>
+#include <map>
+#include <ranges>
 
 //colors defined to make output text colorful (used in './MyGit diff')
 #define RED     "\033[31m"
@@ -26,18 +27,13 @@ constexpr std::string NOT_EXEC_CHAR = "n";
 
 //using path instead of string to make it os-agnostic
 const std::filesystem::path MAIN_FOLDER_PATH = MAIN_FOLDER_NAME;
-const std::filesystem::path INDEX_FILE_PATH =
-    MAIN_FOLDER_PATH / INDEX_FILE_NAME;
-const std::filesystem::path OBJECTS_FOLDER_PATH =
-    MAIN_FOLDER_PATH / OBJECTS_FOLDER_NAME;
-const std::filesystem::path TEMP_COMMIT_FILE_PATH =
-    MAIN_FOLDER_PATH / TEMP_COMMIT_FILE_NAME;
+const std::filesystem::path INDEX_FILE_PATH = MAIN_FOLDER_PATH / INDEX_FILE_NAME;
+const std::filesystem::path OBJECTS_FOLDER_PATH = MAIN_FOLDER_PATH / OBJECTS_FOLDER_NAME;
+const std::filesystem::path TEMP_COMMIT_FILE_PATH = MAIN_FOLDER_PATH / TEMP_COMMIT_FILE_NAME;
 
-const std::filesystem::path REFS_FOLDER_PATH =
-    MAIN_FOLDER_PATH / REFS_FOLDER_NAME;
+const std::filesystem::path REFS_FOLDER_PATH = MAIN_FOLDER_PATH / REFS_FOLDER_NAME;
 
-const std::filesystem::path MAIN_BRANCH_PATH =
-    REFS_FOLDER_PATH / MAIN_BRANCH_NAME;
+const std::filesystem::path MAIN_BRANCH_PATH = REFS_FOLDER_PATH / MAIN_BRANCH_NAME;
 const std::filesystem::path HEAD_PATH = REFS_FOLDER_PATH / HEAD_NAME;
 
 #if defined(_DEBUG) || !defined(NDEBUG)
@@ -51,6 +47,45 @@ struct FileProperties {
   std::string fileHash;
   std::filesystem::path filePath;
 };
+
+std::vector<std::string_view> getCloseStrings(const std::string_view &target,
+                                              const std::vector<std::string_view> &available) {
+  constexpr int allowedDiffRange = 2;
+  std::vector<std::string_view> output;
+  std::map<char, int> targetStringCharFrequency;
+
+  for (char c: target) {
+    targetStringCharFrequency[c]++;
+  }
+  std::map<char, int> tempFrequency(targetStringCharFrequency);
+
+  std::map<char, int> currentStringCharFrequency;
+  for (std::string_view currentCheckedCommand: available) {
+    targetStringCharFrequency = tempFrequency;
+    currentStringCharFrequency.clear();
+    for (char currentCheckedChar: currentCheckedCommand) {
+      currentStringCharFrequency[currentCheckedChar]++;
+    }
+
+    int diff = 0;
+    for (auto &[key, val]: targetStringCharFrequency) {
+      diff += abs(currentStringCharFrequency[key] - targetStringCharFrequency[key]);
+      currentStringCharFrequency[key] = 0;
+      targetStringCharFrequency[key] = 0;
+    }
+    for (auto &[key, val]: currentStringCharFrequency) {
+      diff += abs(currentStringCharFrequency[key] - targetStringCharFrequency[key]);
+      currentStringCharFrequency[key] = 0;
+      targetStringCharFrequency[key] = 0;
+    }
+
+    if (diff <= allowedDiffRange) {
+      output.push_back(currentCheckedCommand);
+    }
+  }
+
+  return output;
+}
 
 void MyGitHelp() {
   //inspired by real git --help
@@ -136,8 +171,7 @@ void MyGitAdd(const std::vector<std::string_view> &arguments) {
   }
 
   if (!std::filesystem::exists(MAIN_FOLDER_PATH)) {
-    std::println(stderr, "Folder '{}' doesn't exist!",
-                 MAIN_FOLDER_PATH.string());
+    std::println(stderr, "Folder '{}' doesn't exist!", MAIN_FOLDER_PATH.string());
     std::println(stderr, "Maybe you didn't './MyGit init'?");
     return;
   }
@@ -152,9 +186,8 @@ void MyGitAdd(const std::vector<std::string_view> &arguments) {
   const std::string hash = calculateHash(filePath);
   const std::filesystem::path fileDestination = OBJECTS_FOLDER_PATH / hash;
   if (std::filesystem::exists(fileDestination)) {
-    std::println(
-      "File with hash '{}' is already present in index. Nothing to do.",
-      fileDestination.filename().string());
+    std::println("File with hash '{}' is already present in index. Nothing to do.",
+                 fileDestination.filename().string());
     return;
   }
 
@@ -163,12 +196,10 @@ void MyGitAdd(const std::vector<std::string_view> &arguments) {
   addToIndex(filePath, hash);
 }
 
-void addToIndex(const std::filesystem::path &filePathToAdd,
-                const std::string &hash) {
+void addToIndex(const std::filesystem::path &filePathToAdd, const std::string &hash) {
   std::ofstream inputIndexFile(INDEX_FILE_PATH, std::ios::app);
   if (!inputIndexFile.is_open()) {
-    throw std::runtime_error(
-      "Failed to open the file2: " + INDEX_FILE_PATH.string());
+    throw std::runtime_error("Failed to open the file2: " + INDEX_FILE_PATH.string());
   }
   std::ifstream outputIndexFile(INDEX_FILE_PATH);
   if (!outputIndexFile.is_open()) {
@@ -190,8 +221,7 @@ void addToIndex(const std::filesystem::path &filePathToAdd,
     std::filesystem::path(INDEX_FILE_PATH).concat(".temp"));
   std::ofstream tempFile(tempFilePath);
   if (!tempFile.is_open()) {
-    throw std::runtime_error(
-      "Failed to open the file2: " + INDEX_FILE_PATH.string());
+    throw std::runtime_error("Failed to open the file2: " + INDEX_FILE_PATH.string());
   }
 
   //TODO: refactor this to use temp file and replace existing index
@@ -199,17 +229,15 @@ void addToIndex(const std::filesystem::path &filePathToAdd,
   if (fileFound) {
     std::string output;
     //change only the hash of the file
-    for (auto const &[execCharToCheck, fileHashToCheck, filePathToCheck]:
-         fileProperties) {
+    for (auto const &[execCharToCheck, fileHashToCheck, filePathToCheck]: fileProperties) {
       if (filePathToCheck == filePathToAdd) {
         std::println("Changing only hash of the file in index");
-        output = "file " + std::string{execCharToCheck} + " " +
-                 calculateHash(filePathToAdd) + " " + filePathToAdd.string() +
-                 "\n";
+        output = "file " + std::string{execCharToCheck} + " " + calculateHash(filePathToAdd) + " " +
+                 filePathToAdd.string() + "\n";
         tempFile.write(output.c_str(), output.size());
       } else {
-        output = "file " + std::string{execCharToCheck} + " " + fileHashToCheck
-                 + " " + filePathToAdd.string() + "\n";
+        output = "file " + std::string{execCharToCheck} + " " + fileHashToCheck + " " +
+                 filePathToAdd.string() + "\n";
         tempFile.write(output.c_str(), output.size());
       }
     }
@@ -218,16 +246,13 @@ void addToIndex(const std::filesystem::path &filePathToAdd,
                                std::filesystem::copy_options::overwrite_existing);
   } else {
     //write at the end of the file
-    std::filesystem::file_status status =
-        std::filesystem::status(filePathToAdd);
+    std::filesystem::file_status status = std::filesystem::status(filePathToAdd);
     std::filesystem::perms permissions = status.permissions();
-    std::string currExecChar = (permissions &
-                                std::filesystem::perms::owner_exec) !=
+    std::string currExecChar = (permissions & std::filesystem::perms::owner_exec) !=
                                std::filesystem::perms::none
                                  ? EXEC_CHAR
                                  : NOT_EXEC_CHAR;
-    std::string output = "file " + currExecChar + " " + hash + " " +
-                         filePathToAdd.string() + "\n";
+    std::string output = "file " + currExecChar + " " + hash + " " + filePathToAdd.string() + "\n";
     inputIndexFile.write(output.c_str(), output.size());
   }
 
@@ -250,19 +275,16 @@ Initial commit with siema.txt and ok.png        <- this commit's message
 
   if (!std::filesystem::exists(INDEX_FILE_PATH)) {
     std::println(stderr, "File {} doesn't exist!", INDEX_FILE_PATH.string());
-    std::println(
-      "Maybe you didn't './MyGit add' any files after './MyGit init'?");
+    std::println("Maybe you didn't './MyGit add' any files after './MyGit init'?");
     return;
   }
   std::ifstream file(INDEX_FILE_PATH, std::ios::binary);
   if (!file.is_open()) {
-    throw std::runtime_error(
-      "Failed to open the file: " + INDEX_FILE_PATH.string());
+    throw std::runtime_error("Failed to open the file: " + INDEX_FILE_PATH.string());
   }
   std::ofstream tempCommitFile(TEMP_COMMIT_FILE_PATH, std::ios::binary);
   if (!tempCommitFile.is_open()) {
-    throw std::runtime_error(
-      "Failed to open the file: " + TEMP_COMMIT_FILE_PATH.string());
+    throw std::runtime_error("Failed to open the file: " + TEMP_COMMIT_FILE_PATH.string());
   }
 
   std::string_view commitMessage = arguments[3];
@@ -326,21 +348,18 @@ Initial commit with siema.txt and ok.png        <- this commit's message
   }
 
   if (std::filesystem::is_empty(MAIN_BRANCH_PATH)) {
-    std::println(
-      "There is no commit in main branch, setting current commit to HEAD");
+    std::println("There is no commit in main branch, setting current commit to HEAD");
   } else {
     std::println("Changing main branch HEAD to this commit");
   }
   std::fstream mainBranchFile(MAIN_BRANCH_PATH, std::ios::out);
   if (!mainBranchFile.is_open()) {
-    throw std::runtime_error(
-      "Failed to open the file: " + MAIN_BRANCH_PATH.string());
+    throw std::runtime_error("Failed to open the file: " + MAIN_BRANCH_PATH.string());
   }
   std::string calculatedHash = calculateHash(TEMP_COMMIT_FILE_PATH);
   mainBranchFile << calculatedHash << std::endl;
   writeToHead(calculatedHash);
-  std::filesystem::path calculatedHashPath =
-      OBJECTS_FOLDER_PATH / calculatedHash;
+  std::filesystem::path calculatedHashPath = OBJECTS_FOLDER_PATH / calculatedHash;
   std::filesystem::copy_file(TEMP_COMMIT_FILE_PATH, calculatedHashPath);
 
   std::filesystem::remove(TEMP_COMMIT_FILE_PATH);
@@ -370,8 +389,7 @@ void MyGitStatus() {
   }
 
   if (std::filesystem::is_empty(MAIN_BRANCH_PATH)) {
-    std::println(
-      "There is no commit in branch main, checking working directory vs index diff");
+    std::println("There is no commit in branch main, checking working directory vs index diff");
   } else {
     std::println("Checking HEAD vs index diff");
     compareHeadAndIndex(filesFromIndex);
@@ -393,9 +411,8 @@ void compareHeadAndIndex(const std::vector<FileProperties> &filesFromIndex) {
   }
   std::string headFileHash;
   getline(headFileHashFile, headFileHash);
-  if (headFileHash.empty())
-    throw std::runtime_error(
-      "Empty hash file even if in previous function it wasn't");
+  if (headFileHash.empty()) throw std::runtime_error(
+    "Empty hash file even if in previous function it wasn't");
   LOG(OBJECTS_FOLDER_PATH.string() + "/" + headFileHash);
   std::filesystem::path headFileHashPath = OBJECTS_FOLDER_PATH / headFileHash;
   std::ifstream headFile(headFileHashPath, std::ios::binary);
@@ -416,15 +433,13 @@ void compareHeadAndIndex(const std::vector<FileProperties> &filesFromIndex) {
     for (auto const &[_, fileHashIndex, filePathIndex]: filesFromIndex) {
       if (filePathHead == filePathIndex) {
         if (fileHashHead == fileHashIndex) {
-          std::println("{} is the same in index and head",
-                       filePathHead.string());
+          std::println("{} is the same in index and head", filePathHead.string());
         } else {
           std::println("modified: {}", filePathHead.string());
         }
       } else if (fileHashHead == fileHashIndex) {
         if (filePathHead == filePathIndex) {
-          std::println("{} is the same in index and head",
-                       filePathHead.string());
+          std::println("{} is the same in index and head", filePathHead.string());
         } else {
           std::println("name changed: {}", filePathHead.string());
         }
@@ -485,8 +500,7 @@ void MyGitLog() {
 
   std::string nextCommitToFind = headFileHash;
   while (!nextCommitToFind.empty()) {
-    std::filesystem::path nextCommitPath =
-        OBJECTS_FOLDER_PATH / nextCommitToFind;
+    std::filesystem::path nextCommitPath = OBJECTS_FOLDER_PATH / nextCommitToFind;
     std::ifstream nextCommit(nextCommitPath, std::ios::binary);
     if (!headFile.is_open()) {
       return;
@@ -560,8 +574,8 @@ void MyGitCheckout(const std::string &commitName, bool isSwitchingBranch) {
     std::filesystem::path fileHashPath = OBJECTS_FOLDER_PATH / file.fileHash;
     std::filesystem::copy_file(fileHashPath, file.filePath,
                                std::filesystem::copy_options::overwrite_existing);
-    LOG("copied file from; " << OBJECTS_FOLDER_PATH.string() + "/" + file.
-      fileHash << " to: " + file.filePath.string());
+    LOG("copied file from; " << OBJECTS_FOLDER_PATH.string() + "/" + file. fileHash << " to: " +
+      file.filePath.string());
   }
 }
 
@@ -614,8 +628,7 @@ void MyGitDiff() {
       std::filesystem::path fileHashPath = OBJECTS_FOLDER_PATH / fileHash;
       std::ifstream fileFromIndex(fileHashPath, std::ios::binary);
       if (!fileFromIndex.is_open()) {
-        std::println("file {}/{} doesn't exist!", OBJECTS_FOLDER_PATH.string(),
-                     fileHash);
+        std::println("file {}/{} doesn't exist!", OBJECTS_FOLDER_PATH.string(), fileHash);
         return;
       }
       std::string indexLine;
@@ -646,8 +659,7 @@ void MyGitBranch() {
 
     std::ifstream tempFile(file.path());
     if (!tempFile.is_open()) {
-      throw std::runtime_error(
-        "Failed to open the file: " + INDEX_FILE_PATH.string());
+      throw std::runtime_error("Failed to open the file: " + INDEX_FILE_PATH.string());
     }
     std::string branchCommitHash;
     getline(tempFile, branchCommitHash);
@@ -659,8 +671,7 @@ void MyGitBranch(const std::string &branchName) {
   std::filesystem::path branchPath = REFS_FOLDER_PATH / branchName;
   if (std::ofstream headFile(branchPath); !headFile.is_open()) {
     throw std::runtime_error(
-      "Failed to open the file: " + REFS_FOLDER_PATH.string() + "/" +
-      branchName);
+      "Failed to open the file: " + REFS_FOLDER_PATH.string() + "/" + branchName);
   }
   std::println("branch {} created", branchName);
 }
@@ -670,8 +681,7 @@ void MyGitSwitch(const std::string &branchName) {
   std::filesystem::path branchPath = REFS_FOLDER_PATH / branchName;
   std::ifstream newBranchFile(branchPath, std::ios::binary);
   if (!newBranchFile.is_open()) {
-    std::println("Branch {}/{} doesn't exist!", REFS_FOLDER_PATH.string(),
-                 branchName);
+    std::println("Branch {}/{} doesn't exist!", REFS_FOLDER_PATH.string(), branchName);
     return;
   }
   std::string newBranchHashLine;
