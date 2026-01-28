@@ -1,5 +1,5 @@
 #include <iostream> // used for std::cout in LOG(x) macro
-#include "mygit.h"
+#include "../include/mygit.h"
 #include <filesystem> //available from c++17
 #include <fstream>
 #include <string>
