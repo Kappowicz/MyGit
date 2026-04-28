@@ -25,6 +25,7 @@ jobs:
         env:
           CC: clang-21
           CXX: clang++-21
+          CXXFLAGS: "-stdlib=libc++"
         run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=26 -DCMAKE_CXX_STANDARD_REQUIRED=ON
 
       - name: Compiling
