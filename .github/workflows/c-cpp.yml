@@ -16,7 +16,10 @@ jobs:
       - name: Install Clang 18 and Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-21 g++-14
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 21
+          sudo apt-get install -y libc++-21-dev libc++abi-21-dev
 
       - name: Configure CMake
         env:
