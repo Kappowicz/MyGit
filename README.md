@@ -61,7 +61,7 @@ hello.txt
 - [X] make my own very simple implementation of some kind of hashing (accidentally remade djb2), now I plan to implement
   SHA-256 later
 - [X] make 'mygit diff's to check differences between some commit and current directory
-- [ ] make some fancy tests in github ci/cd
+- [ ] make some fancy tests in github ci/cd (in progress)
 - [ ] make .mygitignore
 - [ ] make tree object type (for now there are only files and commits, no directories)
 - [ ] make mygit merge
